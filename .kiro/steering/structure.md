@@ -14,6 +14,7 @@ ingest → summarize → tts → publish → (telephony reads publish, never the
 .
 ├── .kiro/
 │   └── steering/   # product.md, tech.md, structure.md
+|── AGENTS.md       # make Kiro auto-read steering files
 └── README.md       # Hackathon submission requirements
 ```
 
