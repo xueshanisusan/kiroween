@@ -2,9 +2,9 @@
 
 ## Introduction
 
-The briefing-pipeline is the headless batch pipeline that turns the MIT News RSS feed into one spoken campus news briefing of about 60 to 120 seconds. It covers ingest, selection, summarization, grounding, text-to-speech and publish. It is the only writer of episode files. It imports nothing from the web player or telephony features.
+The briefing-pipeline is the headless batch pipeline that turns the MIT News RSS feed into one spoken campus news briefing of at least 60 seconds. It covers ingest, selection, summarization, grounding, text-to-speech and publish. It is the only writer of episode files. It imports nothing from the web player or telephony features.
 
-This spec follows `docs/brief.md` (v1). Where the steering files still contain superseded lines (10-minute freshness, skip, Postgres, S3, per-story attribution, lede-verbatim fallback), `docs/brief.md` wins.
+This spec follows `docs/brief.md` (v1), which agrees with the steering files in `.kiro/steering/`; if they ever disagree, `docs/brief.md` wins.
 
 Out of scope: the web player, the Twilio webhook, keypad skip, article scraping, accounts, queues, databases and object storage.
 
@@ -35,6 +35,10 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 - **Publisher**: The component that concatenates Story_Scripts with Template_Text, requests audio, and writes the Episode files.
 - **Episode**: The published result: one MP3 file and one Episode JSON file.
 - **Episode_JSON**: The JSON file carrying `generatedFor`, the selected item IDs, and each story's Story_Script.
+- **Episode_JSON_Schema**: The structure defined by the fields listed in criterion 10.2.
+- **PROPERTY_TEST_RUNS**: The named constant 100, the number of fast-check runs per property (unit: runs).
+- **HTTP_RETRY_COUNT**: The named constant 1, the number of retries for network, LLM and TTS calls (unit: retries).
+- **MIN_EPISODE_SECONDS**: The named constant 60, the minimum measured MP3 duration of a published Episode (unit: seconds).
 - **generatedFor**: The campus-local date for which the Episode was built.
 - **Selected_Set**: The set of Item IDs chosen by the Selector.
 - **Too_Thin_Threshold**: The named constant 500 characters, the minimum Source_Text length.
@@ -52,7 +56,7 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 1. WHEN the Pipeline runs, THE Ingestor SHALL fetch the Feed URL from `src/config/` through `src/lib/http.ts`.
 2. WHEN the Feed XML is received, THE Ingestor SHALL parse each Item into a typed record containing `guid`, `title`, `pubDate` and the `content:encoded` body.
 3. THE Ingestor SHALL read article text only from `content:encoded` and SHALL make no request to any article page.
-4. IF the Feed request fails after one retry, THEN THE Ingestor SHALL return a typed error and THE Pipeline SHALL leave the published Episode unchanged.
+4. IF the Feed request fails after HTTP_RETRY_COUNT retries, THEN THE Ingestor SHALL return a typed error and THE Pipeline SHALL leave the published Episode unchanged.
 5. IF an Item lacks `guid`, `pubDate` or `content:encoded`, THEN THE Ingestor SHALL skip that Item and log its title.
 6. IF an Item `pubDate` cannot be parsed as a date, THEN THE Ingestor SHALL skip that Item and log its title.
 
@@ -90,11 +94,11 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 #### Acceptance Criteria
 
 1. WHEN an Item is summarized, THE Summarizer SHALL send the LLM the opening paragraphs of the Source_Text plus the one impact sentence chosen from the body, and SHALL NOT send a uniform compression request for the whole article.
-2. WHEN the Selected_Set has 3 Items, THE Summarizer SHALL request each Story_Script at a target of 85 words.
+2. WHEN the first pass runs, THE Summarizer SHALL request each Story_Script at a target of 85 words, regardless of whether the Selector returned 1, 2 or 3 Items.
 3. THE Summarizer SHALL obtain each Story_Script from the LLM in one non-streaming call.
 4. THE Summarizer SHALL keep prompt text in `summarize/prompt.ts`.
 5. THE Summarizer SHALL store one Story_Script per Item.
-6. IF the LLM call fails after one retry, THEN THE Summarizer SHALL return a typed error for that Item and THE Pipeline SHALL treat the Item as dropped.
+6. IF the LLM call fails after HTTP_RETRY_COUNT retries, THEN THE Summarizer SHALL return a typed error for that Item and THE Pipeline SHALL treat the Item as dropped.
 7. THE Summarizer SHALL state the outlet and date only in the intro Template_Text, and SHALL name a source inside a Story_Script only when attributing a specific claim.
 
 ### Requirement 5: Extract and check grounded tokens
@@ -136,7 +140,7 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 
 #### Acceptance Criteria
 
-1. WHEN exactly 2 Survivors remain after the first pass, THE Summarizer SHALL re-summarize those 2 Items at a target of 120 words each.
+1. WHEN exactly 2 Survivors remain after the first pass (the Survivor count drives only this second pass), THE Summarizer SHALL re-summarize those 2 Items at a target of 120 words each.
 2. WHEN exactly 1 Survivor remains after the first pass, THE Summarizer SHALL re-summarize that Item at a target of 165 words.
 3. WHEN a Story_Script is re-summarized, THE Grounding_Checker SHALL check it once against the same Source_Text.
 4. IF a re-summarized Story_Script fails the Grounding_Checker, THEN THE Pipeline SHALL drop that story.
@@ -145,18 +149,18 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 
 ### Requirement 8: Enforce the length budget
 
-**User Story:** As a listener, I want the briefing to be between 60 and 120 seconds, so that it fits into a short walk.
+**User Story:** As a listener, I want the briefing to run at least 60 seconds and stay within its word budget, so that it is useful and still fits into a short walk.
 
 #### Acceptance Criteria
 
 1. THE Length_Module SHALL compute the word count of a text by splitting on whitespace.
 2. THE Length_Module SHALL define the speaking rate of 150 words per minute and the story word targets as named constants in `src/config/`, each with a unit comment.
 3. WHEN the final script is assembled, THE Length_Module SHALL compute the total word count of the intro, Story_Scripts and outro.
-4. IF the total word count of the final script is below 150, THEN THE Pipeline SHALL publish no Episode and SHALL report "no new briefing today" as the build outcome.
-5. IF the total word count of the final script exceeds 300, THEN THE Pipeline SHALL publish no Episode and SHALL log a length-exceeded error.
+4. IF the total word count of the final script is below 150, THEN THE Pipeline SHALL publish no Episode and SHALL report "no new briefing today" as the build outcome. This 150-word floor is a cheap pre-check performed before synthesis and does not enforce the 60-second floor; the measured MP3 duration in Requirement 9 enforces that floor.
+5. IF the total word count of the final script exceeds the Length_Budget for the final story count (290 for 3 stories, 275 for 2 stories, 200 for 1 story), THEN THE Pipeline SHALL publish no Episode and SHALL log a length-exceeded error.
 6. THE Length_Module SHALL perform no I/O and read no clock or random source.
 7. FOR ALL texts, THE Length_Module word count of the concatenation of two texts joined by one space SHALL equal the sum of the two word counts.
-8. FOR ALL final scripts accepted by the Length_Module, the total word count SHALL be from 150 through 300 inclusive.
+8. FOR ALL final scripts accepted by the Length_Module, the total word count SHALL be from 150 through the Length_Budget for the final story count, inclusive.
 
 ### Requirement 9: Assemble and synthesize the episode
 
@@ -169,13 +173,15 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 3. WHEN the intro states covered dates because the Selector widened the window, THE Publisher SHALL include those dates in the intro Template_Text.
 4. WHEN the script is assembled, THE Publisher SHALL pass it to the TTS_Adapter, and THE TTS_Adapter SHALL return one MP3 file from one non-streaming call.
 5. THE Publisher SHALL take the campus name, voice id and greeting text from `src/config/`.
-6. IF the TTS_Adapter call fails after one retry, THEN THE Pipeline SHALL leave the published Episode unchanged and log the error.
+6. IF the TTS_Adapter call fails after HTTP_RETRY_COUNT retries, THEN THE Pipeline SHALL leave the published Episode unchanged and log the error.
 7. THE Pipeline SHALL expose the TTS_Adapter and the LLM as interfaces with one implementation each.
-8. WHERE a measured MP3 duration is available, THE Publisher SHALL log the duration, and THE Pipeline SHALL publish no Episode with a duration under 60 seconds.
+8. WHEN the TTS_Adapter returns an MP3, THE Publisher SHALL measure the actual duration of that MP3 and log the measured duration, on every build.
+9. IF the duration of the MP3 cannot be measured, THEN THE Pipeline SHALL count the duration check as failed, publish no Episode, and log the failure.
+10. IF the measured MP3 duration is below MIN_EPISODE_SECONDS, THEN THE Pipeline SHALL publish no Episode and log the failure.
 
 ### Requirement 10: Publish episode files
 
-**User Story:** As the web player and telephony features, I want a consistent published Episode on disk, so that I can read the latest briefing without calling the pipeline.
+**User Story:** As a downstream consumer that reads the published artefacts, I want a consistent published Episode on disk, so that I can read the latest briefing without calling the Pipeline.
 
 #### Acceptance Criteria
 
@@ -185,7 +191,7 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 4. THE Publisher SHALL write the MP3 before the Episode_JSON, so that published JSON never references a missing MP3.
 5. THE Publisher SHALL be the only component that writes Episode files.
 6. THE Pipeline SHALL import nothing from the web player or telephony modules.
-7. FOR ALL valid Episode_JSON objects, serializing then parsing then serializing SHALL produce an equivalent object (round-trip property).
+7. FOR ALL objects that conform to the Episode_JSON_Schema referenced in criterion 10.8, serializing then parsing then serializing SHALL produce an equivalent object (round-trip property).
 8. IF the Episode_JSON read from disk does not match the Episode_JSON schema, THEN THE parser SHALL return a typed error naming the invalid field.
 9. THE Episode_JSON serializer SHALL produce JSON that the Episode_JSON parser accepts.
 
@@ -234,9 +240,9 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 2. THE repository SHALL contain `scripts/fetch-fixture.ts`, which downloads a Feed copy into `content/fixtures/`.
 3. THE `.gitignore` file SHALL exclude `content/fixtures/*.xml` except `synthetic-3-items.xml`.
 4. THE tests SHALL read only `synthetic-3-items.xml` from `content/fixtures/`.
-5. THE test suite SHALL include property tests, using fast-check with at least 100 runs each, for the Length_Module and the Grounding_Checker.
+5. THE test suite SHALL include property tests, using fast-check with at least PROPERTY_TEST_RUNS runs each, for the Length_Module and the Grounding_Checker.
 6. THE test suite SHALL include a property test for the Selector and a round-trip property test for the Episode_JSON serializer and parser.
-7. THE test suite SHALL run without network access and without LLM or TTS credentials, using fakes for the LLM and the TTS_Adapter.
+7. THE test suite SHALL run without network access and without LLM or TTS credentials, using fakes for the LLM and the TTS_Adapter. The fake TTS_Adapter SHALL return a real MP3 file with a known duration, so that tests exercise the same duration-measurement code path as production.
 
 ### Requirement 15: Configuration and dependency limits
 
@@ -244,8 +250,8 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 
 #### Acceptance Criteria
 
-1. THE Pipeline SHALL read the campus name, Feed URLs, Campus_Timezone, voice id, greeting text, word targets, Too_Thin_Threshold and story count cap only from `src/config/`.
+1. THE Pipeline SHALL read the campus name, Feed URLs, Campus_Timezone, voice id, greeting text, word targets, Too_Thin_Threshold, story count cap, PROPERTY_TEST_RUNS, HTTP_RETRY_COUNT and MIN_EPISODE_SECONDS only from `src/config/`, each declared with a unit comment.
 2. WHERE an HTML-stripping dependency is used, THE repository SHALL record that dependency and its reason in `.kiro/steering/tech.md`.
 3. THE Pipeline SHALL use no database, queue, broker, ORM, vector store or object storage.
-4. THE Pipeline SHALL pass every network call through `src/lib/http.ts`, which applies a timeout, one retry and a typed error.
+4. THE Pipeline SHALL pass every network call through `src/lib/http.ts`, which applies a timeout, HTTP_RETRY_COUNT retries and a typed error.
 5. THE Pipeline SHALL return `Result<T, E>` values at module boundaries.

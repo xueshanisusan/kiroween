@@ -2,6 +2,18 @@
 
 ## What Is This?
 
+## Implement Process
+
+1. build steering
+2. vibe chat brainstorm
+3. vibe to spec
+4. requirement-first OR design-first?
+5. requirement stage
+6. write `design.md`
+7. write `tasks.md`
+8. implement
+9. iterate using Sync Files
+
 ## How To Use KIRO
 
 This section is for my fellow teammates.

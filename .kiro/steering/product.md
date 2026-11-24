@@ -6,7 +6,7 @@ inclusion: always
 
 ## One line
 
-Turns a campus news feed into a 60–120 second audio briefing a student can hear by calling a phone number. You don't need an app, a screen, or to scroll.
+Turns a campus news feed into a 60–120 second audio briefing that a student plays from a web page (primary) or hears by calling a phone number. No app and no scrolling; the phone line shows that no screen is needed.
 
 ## Why this exists
 
@@ -54,6 +54,10 @@ Demo runs against MIT News' public RSS feed: https://news.mit.edu/rss/feed
 Chosen because it is verified working, carries full article text in the feed, and publishes near-daily. It is research and institutional news, not student-life news — do not describe the product as "student voices".
 The pipeline is campus-agnostic: a different school means different config, not different code.
 
+## Delivery surfaces (decided)
+- The web page is the primary surface. The phone line is the second reader of the same published episode.
+- Both read the same MP3 and episode JSON from one service. Neither writes episode files.
+
 ## Non-goals for v1
 
 - Live call-in, recording listener voices, LLM moderation of caller audio.
@@ -78,7 +82,6 @@ campus, claim "swap the config, get another campus".
 - [x] Which campus, which feed URL? Official RSS, or scrape the news index?
 - [x] Phone number: Twilio trial number acceptable? Who owns it?
 - [ ] Voice: Polly neural vs ElevenLabs (quality vs cost/latency)?
-- [ ] Do judges need a web fallback player for people who can't dial in?
 
 ## Submission requirements that affect the code
 

@@ -4,8 +4,6 @@ inclusion: always
 
 # Tech
 
-# Tech
-
 ## Decided
 
 - TypeScript on Node 22, ESM.
@@ -18,7 +16,7 @@ inclusion: always
 
 ## Provisional
 
-- RSS via `rss-parser`; article body via `cheerio` + a per-site selector in config.
+- RSS via `rss-parser`.
 - LLM: whichever we have credits for, hidden behind `summarize/summarize.ts`.
 - TTS: **OPEN — decide after a real listen test.** Requirements: one offline call produces the whole MP3 (no streaming), and the voice is intelligible over a phone speaker outdoors, not in a quiet room. Amazon Polly neural is the default candidate on cost, not a decision.
 
@@ -26,7 +24,7 @@ inclusion: always
 
 - No vector DB, no embeddings, no RAG. The corpus is five articles a day.
 - No audio streaming, websockets, or real-time TTS mid-call.
-- No queue or broker. A cron and a table are enough.
+- No queue or broker. A cron and JSON files on disk are enough; no database.
 - No auth, no user accounts, no ORM.
 - No scraping behind a login or paywall.
 - No fine-tuning. Prompts plus fixtures.

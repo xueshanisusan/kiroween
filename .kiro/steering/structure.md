@@ -30,7 +30,7 @@ ingest → summarize → tts → publish → (telephony reads publish, never the
 - kebab-case filenames, named exports only, one responsibility per file.
 - `Result<T, E>` at boundaries; throw only for programmer error.
 - No `any`, no default exports, and no new runtime dependency without a line in `tech.md` saying why the existing stack can't do it.
-- - Ingest reads RSS only. Extraction is HTML stripping from the feed's content:encoded — there is no article scraping and no per-site CSS selector.
+- Ingest reads RSS only. Extraction is HTML stripping from the feed's content:encoded — there is no article scraping and no per-site CSS selector.
 
 ## What goes where
 - Prompt text lives beside its caller (`summarize/prompt.ts`), never inline in a function body.

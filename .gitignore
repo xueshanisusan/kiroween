@@ -1,0 +1,2 @@
+content/fixtures/*.xml
+!content/fixtures/synthetic-*.xml
