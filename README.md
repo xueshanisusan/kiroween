@@ -4,15 +4,15 @@
 
 ## Implement Process
 
-1. build steering
-2. vibe chat brainstorm
-3. vibe to spec
+1. build steering files such as `product.md`, `structure.md` and `tech.md`
+2. vibe, chat, brainstorm
+3. vibe to spec: create a spec
 4. requirement-first OR design-first?
-5. requirement stage
-6. write `design.md`
-7. write `tasks.md`
+5. requirement stage: *Analyze Requirements* button
+6. write `design.md`: *Generate Tech Design* button
+7. write `tasks.md`: *Generate Task List* button
 8. implement
-9. iterate using Sync Files
+9. iterate using *Sync Files*
 
 ## How To Use KIRO
 
@@ -35,11 +35,9 @@ Read this before your first session:
 
 ### 2. The order of operations
 
-1. Steering: it indicates the scope and constraints of the project. It will only be written once, and amended rarely.
-2. Brief: I brainstorm the idea with Kiro and generate the `doc/brief.md` file. Kiro will point out all the arguments behind each decision.
-3. Spec: one spec per feature. When you want to implement a feature, click on the Spec button first!
-4. Design: where trade-offs and rejected alternatives are recorded.
-5. Tasks: run the first two or three one at a time and review each.
+1. Spec: one spec per feature. When you want to implement a feature, click on the *Spec* button first!
+2. Design: where trade-offs and rejected alternatives are recorded.
+3. Tasks: run the first two or three one at a time and review each.
 
 I also noticed Kiro IDE uses cloud sessions, so you have to commit and push `./kiro` **before** starting a cloud session.
 

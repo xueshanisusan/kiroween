@@ -10,14 +10,21 @@ Out of scope: the web player, the Twilio webhook, keypad skip, article scraping,
 
 Open decisions (voice provider, LLM provider) are hidden behind adapter interfaces, so these requirements do not depend on them.
 
+A reference such as 11.9 means criterion 9 of Requirement 11.
+
 ## Glossary
 
 - **Pipeline**: The batch process started by `scripts/build-briefing.ts` that produces an Episode.
 - **Feed**: The RSS document at `https://news.mit.edu/rss/feed`, configured in `src/config/`.
 - **Item**: One `item` element of the Feed, with `guid`, `title`, `pubDate` and `content:encoded`.
 - **Ingestor**: The component that fetches the Feed and parses Items.
-- **Normalizer**: The pure function that strips HTML tags from `content:encoded` and normalizes whitespace.
-- **Source_Text**: The Normalizer output for one Item.
+- **Tag_Stripper**: The pure function that, in a single left-to-right pass over `content:encoded`, replaces each block-level tag with one space, deletes each other tag whose name is in the Known_Tag_Set, removes `script` and `style` elements and HTML comments together with their contents (each contributing nothing), and preserves literally any tag-shaped text whose name is not in the Known_Tag_Set. It is stage A1 of the Normalizer.
+- **Known_Tag_Set**: A named constant, matched case-insensitively against the tag name, before any attributes: p, div, br, a, em, strong, b, i, code, span, sub, sup, cite, img, iframe, center, blockquote, h1, h2, h3, h4, h5, h6, ul, ol, li, table, tr, td, th, svg, path, g, script, style, section, article, figure, figcaption. The Block_Tag_Set is a subset of the Known_Tag_Set (section, article, figure and figcaption are listed so that this holds).
+- **Block_Tag_Set**: A named constant, matched case-insensitively against the tag name: p, div, br, li, ol, ul, h1, h2, h3, h4, h5, h6, tr, td, th, table, blockquote, section, article, figure, figcaption, center.
+- **Entity_Decoder**: The pure function that decodes character references in one pass over the Tag_Stripper output. It is stage B of the Normalizer.
+- **Whitespace_Normalizer**: The pure function that collapses every run of whitespace into one space and trims leading and trailing whitespace. It is stage A2 of the Normalizer.
+- **Normalizer**: The composition of the Tag_Stripper, then the Entity_Decoder, then the Whitespace_Normalizer, applied in that order to the `content:encoded` of one Item.
+- **Source_Text**: The Whitespace_Normalizer output, which is the Normalizer output for one Item.
 - **Selector**: The pure function in `select.ts` that chooses Items from a list, given `now`.
 - **Campus_Timezone**: The IANA timezone from `src/config/` used to decide what "today" is.
 - **Summarizer**: The component behind `summarize/summarize.ts` that asks the LLM for one Story_Script.
@@ -39,6 +46,8 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 - **PROPERTY_TEST_RUNS**: The named constant 100, the number of fast-check runs per property (unit: runs).
 - **HTTP_RETRY_COUNT**: The named constant 1, the number of retries for network, LLM and TTS calls (unit: retries).
 - **MIN_EPISODE_SECONDS**: The named constant 60, the minimum measured MP3 duration of a published Episode (unit: seconds).
+- **BUILD_BUDGET_SECONDS**: The named constant for the total time allowed for one build (unit: seconds), declared in `src/config/` with the other limits. Its value is 300 (unit: seconds). The value must be at most 600, so that the 20-minute cron interval plus BUILD_BUDGET_SECONDS does not exceed 30 minutes.
+- **BUILD_LOCK_GRACE_SECONDS**: The named constant (unit: seconds) for the grace period added to BUILD_BUDGET_SECONDS before a held build lock is considered stale. Its value is 60 (unit: seconds).
 - **generatedFor**: The campus-local date for which the Episode was built.
 - **Selected_Set**: The set of Item IDs chosen by the Selector.
 - **Too_Thin_Threshold**: The named constant 500 characters, the minimum Source_Text length.
@@ -66,11 +75,22 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 
 #### Acceptance Criteria
 
-1. WHEN an Item body is normalized, THE Normalizer SHALL remove all HTML tags and decode HTML entities.
-2. WHEN an Item body is normalized, THE Normalizer SHALL collapse every run of whitespace into one space and trim leading and trailing whitespace.
-3. THE Normalizer SHALL perform no I/O and read no clock or random source.
-4. FOR ALL strings, normalizing the output of the Normalizer SHALL produce the same output (idempotence).
-5. FOR ALL strings, THE Normalizer output SHALL contain no `<` followed by a tag name and no whitespace run longer than one character.
+1. THE Tag_Stripper SHALL, in a single pass, replace each tag whose name (case-insensitive, in opening, closing or self-closing form) is in the Block_Tag_Set with a single space; SHALL delete every other tag whose name is in the Known_Tag_Set with no replacement (`script` and `style` elements are handled by criterion 2.13); and SHALL preserve literally any text that is not recognised as a tag under criterion 2.10, including tags with unknown names. Deleting an `img` tag also loses its data-caption text; this is acceptable because the caption is then absent from the Source_Text, which is both the LLM input and the Grounding_Checker reference, so the loss cannot cause a false rejection. Because the Tag_Stripper runs before the Entity_Decoder and deletes the whole `img` tag including its attributes, the caption text, and any character references inside the tag, never enter the Source_Text.
+2. THE Whitespace_Normalizer SHALL collapse every run of whitespace into one space and trim leading and trailing whitespace, where whitespace includes U+00A0 so that `&nbsp;` and `&#160;` behave identically, and THE Whitespace_Normalizer SHALL run after the Entity_Decoder.
+3. THE Tag_Stripper, THE Entity_Decoder and THE Whitespace_Normalizer SHALL each perform no I/O and read no clock or random source.
+4. THE Pipeline SHALL apply the Tag_Stripper exactly once per article, and SHALL NOT re-run the Tag_Stripper on its own output or on Entity_Decoder output.
+5. FOR ALL strings, every character of the Tag_Stripper output SHALL come from the input in the same order, except that each block-level tag contributes one space, each other known tag contributes nothing, and each `script` or `style` element and each HTML comment contributes nothing (the element or comment and its contents are removed); tag-shaped text not recognised under criterion 2.10 SHALL be preserved literally; and any `<` remaining in the output SHALL be a literal `<` as defined by criterion 2.10.
+6. WHEN the Entity_Decoder meets a named character reference that is not in the fixed named-entity table, THE Entity_Decoder SHALL preserve that reference in its output exactly as it appeared in its input, and SHALL NOT remove it or replace it with an empty string. This preserves the Source_Text used by the Grounding_Checker, because dropping an entity would change the source and could cause false rejections and false passes.
+7. THE Entity_Decoder, being pure (criterion 2.3), SHALL return the names of unrecognised named character references alongside its decoded output, and THE Pipeline SHALL log each unrecognised entity name once per article. The logging is done by the Pipeline because the Entity_Decoder performs no I/O.
+8. WHEN the Entity_Decoder runs, THE Entity_Decoder SHALL decode the pinned entity set (numeric decimal references, numeric hexadecimal references, and the fixed named-entity table defined in the design document) in a single pass over the Tag_Stripper output, and SHALL NOT re-scan its own output. The Entity_Decoder output is an intermediate result that is passed to the Whitespace_Normalizer, not final text. THE Entity_Decoder SHALL decode `&nbsp;` to a plain space (U+0020).
+9. THE Pipeline SHALL apply the stages in the order Tag_Stripper, Entity_Decoder, Whitespace_Normalizer, and this order SHALL be the only permitted order. THE Pipeline SHALL NOT pass Entity_Decoder output back to the Tag_Stripper, and only the Whitespace_Normalizer may follow the Entity_Decoder, so that source text such as `&lt;b&gt;`, which the Entity_Decoder decodes to the literal text `<b>`, is not later removed as a tag, which would silently lose content.
+10. WHEN the Item body contains a `<` that is not the start of a tag, THE Tag_Stripper SHALL leave that `<` and the text after it unchanged, so that text such as "5 < 6" loses no content. A `<` is the start of a tag only if the tag name following it (after an optional `/`), taken as the maximal run of ASCII letters and digits and matched case-insensitively before any attributes, is in the Known_Tag_Set, AND a closing `>` is found. When THE Tag_Stripper looks for the closing `>` of a tag, THE Tag_Stripper SHALL skip over single-quoted and double-quoted attribute values, so that a `>` or `<` inside a quoted value does not end the tag or the search; the closing `>` is the first `>` outside a quoted value. This is required because the `img` caption must never reach the Source_Text (criterion 2.1): for example `data-caption="a > b"` must not end the tag at the first `>`. IF the closing `>` is not found before the next `<` outside a quoted value or before the end of the input (including an unterminated quote), THEN the `<` is literal text and THE Tag_Stripper SHALL leave it, together with the text after it, unchanged. A comment start `<!--` is not subject to the Known_Tag_Set test and is handled by criterion 2.13. The Tag_Stripper does not guess: unknown or malformed text is preserved, which is the same principle as the unknown-entity rule in criterion 2.6. This criterion is the single definition of the start of a tag.
+11. FOR ALL strings, applying the Whitespace_Normalizer twice SHALL give the same result as applying it once (idempotence), and the Whitespace_Normalizer output SHALL contain no whitespace run longer than one character and no leading or trailing whitespace; THE Whitespace_Normalizer SHALL create no tag start that was not present in its input.
+12. THE Pipeline SHALL use the Source_Text (the Whitespace_Normalizer output, which includes the single spaces inserted for block-level tags) for the Grounding_Checker, the Too_Thin_Threshold check and the input sent to the LLM. Word counting splits on whitespace, so block-tag spaces change counts by design.
+13. THE Tag_Stripper SHALL remove each `script` and each `style` element together with its entire contents, from the opening tag through the matching closing tag (case-insensitive), and SHALL remove each HTML comment `<!-- ... -->` together with its entire contents, in every case without replacing it by a space, so that script, style or comment contents never reach the Source_Text. Note: `style` does not occur in the feed today (a `script` element does, an embedded social-media post); the rule exists so that its arrival is not a regression.
+14. WHEN the body contains a tag-shaped sequence (a `<`, an optional `/`, a run of ASCII letters, then whitespace, `/` or `>`) whose name is not in the Known_Tag_Set, THE Tag_Stripper SHALL preserve it literally and SHALL return the unrecognised tag name alongside its output, and THE Pipeline SHALL log each such name once per article. The Tag_Stripper is pure (criterion 2.3), and the log is how a missing tag name is discovered.
+15. IF a `script` or `style` opening tag, or an HTML comment opening `<!--`, has no matching closing tag (`</script>`, `</style>` or `-->`), THEN THE Tag_Stripper SHALL drop everything from that opening to the end of the article, and SHALL return the element name and the offset where it started alongside its output, and THE Pipeline SHALL log one line naming the element and that offset. The opening tag already shows that the markup is broken, and keeping the text would send code to the LLM. No special case is made for the result: if the remaining article is shorter than the Too_Thin_Threshold, the too-thin rule in criterion 6.2 drops the story.
+16. THE Block_Tag_Set SHALL be a subset of the Known_Tag_Set, so that a block tag added to one list without the other cannot be left unrecognised.
 
 ### Requirement 3: Select stories by recency
 
@@ -194,6 +214,7 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 7. FOR ALL objects that conform to the Episode_JSON_Schema referenced in criterion 10.8, serializing then parsing then serializing SHALL produce an equivalent object (round-trip property).
 8. IF the Episode_JSON read from disk does not match the Episode_JSON schema, THEN THE parser SHALL return a typed error naming the invalid field.
 9. THE Episode_JSON serializer SHALL produce JSON that the Episode_JSON parser accepts.
+10. WHEN the parser returns a typed error for an Episode_JSON that fails schema validation, THE parser SHALL leave the invalid file on disk unchanged (no deletion, no quarantine, no rewrite).
 
 ### Requirement 11: Rebuild only when the selection changes
 
@@ -208,6 +229,12 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 5. WHEN no Episode is published yet, THE Pipeline SHALL treat the stored Selected_Set as empty.
 6. WHEN a new Item enters the Feed, THE Pipeline SHALL publish an updated Episode within 30 minutes, counting up to 20 minutes for the next cron run plus the build time.
 7. IF the Selected_Set is empty, THEN THE Pipeline SHALL publish no new Episode and SHALL log the outcome.
+8. No requirement in this spec enforces the 30-minute figure by alerting or escalation. The figure is an expectation under normal operation; 11.9 and 11.10 are the mechanisms that make it hold.
+9. THE Pipeline SHALL enforce a total build budget given by BUILD_BUDGET_SECONDS. IF a build exceeds BUILD_BUDGET_SECONDS, THEN THE Pipeline SHALL abort the build and treat it as a failure under the publish-nothing rule: THE Publisher SHALL write no partial Episode file and the previously published Episode SHALL stay in place.
+10. THE Pipeline SHALL allow at most one build to run at a time. IF a build is still running when the next cron tick fires, THEN THE Pipeline SHALL skip that tick and THE Logger SHALL log the skip. THE Pipeline SHALL NOT let two concurrent builds publish over each other.
+11. WHEN a build ends, THE Logger SHALL write one structured log line containing `buildDurationMs` (unit: milliseconds) and `exceededBudget` (boolean). THE Pipeline SHALL take no alerting or escalation action based on that log line.
+12. IF a build lock has been held longer than BUILD_BUDGET_SECONDS plus BUILD_LOCK_GRACE_SECONDS, THEN THE Pipeline SHALL treat the lock as stale, reclaim it, and write a log line naming the reclamation.
+13. THE configured values SHALL satisfy BUILD_BUDGET_SECONDS + BUILD_LOCK_GRACE_SECONDS < the cron interval in seconds (1200), so that a crashed build costs at most one skipped cron tick.
 
 ### Requirement 12: Use the campus timezone for "today"
 
@@ -243,6 +270,12 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 5. THE test suite SHALL include property tests, using fast-check with at least PROPERTY_TEST_RUNS runs each, for the Length_Module and the Grounding_Checker.
 6. THE test suite SHALL include a property test for the Selector and a round-trip property test for the Episode_JSON serializer and parser.
 7. THE test suite SHALL run without network access and without LLM or TTS credentials, using fakes for the LLM and the TTS_Adapter. The fake TTS_Adapter SHALL return a real MP3 file with a known duration, so that tests exercise the same duration-measurement code path as production.
+8. THE test suite SHALL actively enforce that no network call occurs, using a network-disabling test harness or an assertion that fails the test on any network attempt, rather than relying on the absence of network access.
+9. THE Tag_Stripper property test SHALL include the regression input `<<b>b>` with the expected output `<b>`, because it is the smallest input that fails a fixpoint-iterating stripper and a single-pass-idempotence claim. The first `<` has no `>` before the next `<`, so it is literal, and the inline tag `<b>` is deleted.
+10. THE Normalizer test suite SHALL include the regression input `<p>end.</p><p>Next</p>` with the expected Source_Text "end. Next", and the property test for criterion 2.5 SHALL use it, so that adjacent block tags never merge words ("end.Next").
+11. THE Normalizer test suite SHALL include the regression input `<p>a</p><script>var x = 1;</script><p>b</p>` with the expected Source_Text "a b" and with "var x" absent from the Source_Text.
+12. THE Normalizer test suite SHALL include the regression input `x<y and y>z`, for which the Tag_Stripper output SHALL equal the input unchanged, the returned unrecognised tag names SHALL be exactly `y`, and THE Pipeline SHALL log `y` once; this is the case that exercises criterion 2.14 on text that is not a tag.
+13. THE test suite SHALL include a property test that every member of the Block_Tag_Set is a member of the Known_Tag_Set.
 
 ### Requirement 15: Configuration and dependency limits
 
@@ -250,7 +283,7 @@ Open decisions (voice provider, LLM provider) are hidden behind adapter interfac
 
 #### Acceptance Criteria
 
-1. THE Pipeline SHALL read the campus name, Feed URLs, Campus_Timezone, voice id, greeting text, word targets, Too_Thin_Threshold, story count cap, PROPERTY_TEST_RUNS, HTTP_RETRY_COUNT and MIN_EPISODE_SECONDS only from `src/config/`, each declared with a unit comment.
+1. THE Pipeline SHALL read the campus name, Feed URLs, Campus_Timezone, voice id, greeting text, word targets, Too_Thin_Threshold, story count cap, PROPERTY_TEST_RUNS, HTTP_RETRY_COUNT, MIN_EPISODE_SECONDS, BUILD_BUDGET_SECONDS and BUILD_LOCK_GRACE_SECONDS only from `src/config/`, each declared with a unit comment.
 2. WHERE an HTML-stripping dependency is used, THE repository SHALL record that dependency and its reason in `.kiro/steering/tech.md`.
 3. THE Pipeline SHALL use no database, queue, broker, ORM, vector store or object storage.
 4. THE Pipeline SHALL pass every network call through `src/lib/http.ts`, which applies a timeout, HTTP_RETRY_COUNT retries and a typed error.
