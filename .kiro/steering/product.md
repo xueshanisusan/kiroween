@@ -34,12 +34,12 @@ Secondary: a screen-reader user who wants the day's news as one linear audio str
 2. Extract full article text (feeds usually carry only an excerpt).
 3. Summarize into a spoken script of 60–120 s, neutral tone, source attributed.
 4. Synthesize one MP3 per campus per day.
-5. Student dials in → hears today's briefing → keypad to replay / skip story.
+5. Student hears one continuous briefing MP3. No keypad interaction in v1. Scripts are stored per story and concatenated at publish time, so adding skip later is a playback change, not a data migration.
 
 Two performance requirements that shape everything:
 
-- News published → listenable in **under 10 minutes**.
-- Pickup → first word in **under 2 seconds**.
+- The episode rebuilds when the selected story set changes. Worst case a new story is audible within 30 minutes. There is no "live within N minutes" target.
+- Phone path only: pickup → first word in under 2 seconds. This target does not apply to the web player, whose target is "player ready under 1 second".
 
 ## Hard constraints
 
@@ -48,6 +48,11 @@ Two performance requirements that shape everything:
 - **Audio alone must be sufficient.** No information may live only in a visual UI.
 - **Attribution always.** Each story names its source and publish date on air.
 - **One briefing per campus per day, cached** — not regenerated per caller.
+
+## Demo source (decided)
+Demo runs against MIT News' public RSS feed: https://news.mit.edu/rss/feed
+Chosen because it is verified working, carries full article text in the feed, and publishes near-daily. It is research and institutional news, not student-life news — do not describe the product as "student voices".
+The pipeline is campus-agnostic: a different school means different config, not different code.
 
 ## Non-goals for v1
 
@@ -70,8 +75,8 @@ feed URLs, voice and greeting are config; everything else is shared. Demo one
 campus, claim "swap the config, get another campus".
 
 ## OPEN QUESTIONS — Kiro: if a task depends on one of these, STOP and ask.
-- [ ] Which campus, which feed URL? Official RSS, or scrape the news index?
-- [ ] Phone number: Twilio trial number acceptable? Who owns it?
+- [x] Which campus, which feed URL? Official RSS, or scrape the news index?
+- [x] Phone number: Twilio trial number acceptable? Who owns it?
 - [ ] Voice: Polly neural vs ElevenLabs (quality vs cost/latency)?
 - [ ] Do judges need a web fallback player for people who can't dial in?
 

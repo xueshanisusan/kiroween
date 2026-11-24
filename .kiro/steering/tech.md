@@ -10,16 +10,17 @@ inclusion: always
 
 - TypeScript on Node 22, ESM.
 - One deployable service; one cron entry point (`scripts/build-briefing.ts`).
-- Postgres locally/SQLite for episode + story metadata; S3 (or disk in dev) for MP3s.
+- Episode and story metadata as JSON on local disk. MP3s on local disk, served by the same service as the player and the episode JSON. No database, no object storage, no bucket policy in v1.
 - Twilio Programmable Voice for the line: inbound call → webhook returns TwiML that `<Play>`s a pre-generated public MP3 URL. **No synthesis on the call.**
 - Vitest + fast-check.
 - Structured JSON logs, one line per stage, `briefingId` on every line.
+- Ingest reads the RSS feed only. **Do not scrape article pages in v1.** The feed carries full text; the parser strips HTML and that is the whole extraction step. A fixture copy of today's XML lives in content/fixtures/.
 
 ## Provisional
 
 - RSS via `rss-parser`; article body via `cheerio` + a per-site selector in config.
 - LLM: whichever we have credits for, hidden behind `summarize/summarize.ts`.
-- TTS: Amazon Polly neural (cheap, SSML, same cloud as S3) unless it fails a listen test in a quiet room.
+- TTS: **OPEN — decide after a real listen test.** Requirements: one offline call produces the whole MP3 (no streaming), and the voice is intelligible over a phone speaker outdoors, not in a quiet room. Amazon Polly neural is the default candidate on cost, not a decision.
 
 ## Forbidden
 
