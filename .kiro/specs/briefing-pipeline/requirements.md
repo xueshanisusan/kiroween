@@ -263,19 +263,17 @@ A reference such as 11.9 means criterion 9 of Requirement 11.
 
 #### Acceptance Criteria
 
-1. THE repository SHALL contain `content/fixtures/synthetic-3-items.xml`, a hand-written RSS file with 3 Items.
-2. THE repository SHALL contain `scripts/fetch-fixture.ts`, which downloads a Feed copy into `content/fixtures/`.
-3. THE `.gitignore` file SHALL exclude `content/fixtures/*.xml` except `synthetic-3-items.xml`.
-4. THE tests SHALL read only `synthetic-3-items.xml` from `content/fixtures/`.
-5. THE test suite SHALL include property tests, using fast-check with at least PROPERTY_TEST_RUNS runs each, for the Length_Module and the Grounding_Checker.
-6. THE test suite SHALL include a property test for the Selector and a round-trip property test for the Episode_JSON serializer and parser.
-7. THE test suite SHALL run without network access and without LLM or TTS credentials, using fakes for the LLM and the TTS_Adapter. The fake TTS_Adapter SHALL return a real MP3 file with a known duration, so that tests exercise the same duration-measurement code path as production.
-8. THE test suite SHALL actively enforce that no network call occurs, using a network-disabling test harness or an assertion that fails the test on any network attempt, rather than relying on the absence of network access.
-9. THE Tag_Stripper property test SHALL include the regression input `<<b>b>` with the expected output `<b>`, because it is the smallest input that fails a fixpoint-iterating stripper and a single-pass-idempotence claim. The first `<` has no `>` before the next `<`, so it is literal, and the inline tag `<b>` is deleted.
-10. THE Normalizer test suite SHALL include the regression input `<p>end.</p><p>Next</p>` with the expected Source_Text "end. Next", and the property test for criterion 2.5 SHALL use it, so that adjacent block tags never merge words ("end.Next").
-11. THE Normalizer test suite SHALL include the regression input `<p>a</p><script>var x = 1;</script><p>b</p>` with the expected Source_Text "a b" and with "var x" absent from the Source_Text.
-12. THE Normalizer test suite SHALL include the regression input `x<y and y>z`, for which the Tag_Stripper output SHALL equal the input unchanged, the returned unrecognised tag names SHALL be exactly `y`, and THE Pipeline SHALL log `y` once; this is the case that exercises criterion 2.14 on text that is not a tag.
-13. THE test suite SHALL include a property test that every member of the Block_Tag_Set is a member of the Known_Tag_Set.
+1. THE repository SHALL gitignore real feed snapshots and commit only the synthetic fixture, that is, THE `.gitignore` file SHALL contain the rule `content/fixtures/*.xml` followed by the negation `!content/fixtures/synthetic-*.xml`, so that `synthetic-3-items.xml` is committed and every real snapshot is not.
+2. THE tests SHALL read feed input only from the Fixture (the hand-written synthetic RSS file defined in the glossary), SHALL NOT read any real feed snapshot, and SHALL make no network request.
+3. THE test suite SHALL include property tests, using fast-check with at least PROPERTY_TEST_RUNS runs each, for the Length_Module and the Grounding_Checker.
+4. THE test suite SHALL include a property test for the Selector and a round-trip property test for the Episode_JSON serializer and parser.
+5. THE test suite SHALL run without network access and without LLM or TTS credentials, using fakes for the LLM and the TTS_Adapter. The fake TTS_Adapter SHALL return a real MP3 file with a known duration, so that tests exercise the same duration-measurement code path as production.
+6. THE test suite SHALL actively enforce that no network call occurs, using a network-disabling test harness or an assertion that fails the test on any network attempt, rather than relying on the absence of network access.
+7. THE Tag_Stripper property test SHALL include the regression input `<<b>b>` with the expected output `<b>`, because it is the smallest input that fails a fixpoint-iterating stripper and a single-pass-idempotence claim. The first `<` has no `>` before the next `<`, so it is literal, and the inline tag `<b>` is deleted.
+8. THE Normalizer test suite SHALL include the regression input `<p>end.</p><p>Next</p>` with the expected Source_Text "end. Next", and the property test for criterion 2.5 SHALL use it, so that adjacent block tags never merge words ("end.Next").
+9. THE Normalizer test suite SHALL include the regression input `<p>a</p><script>var x = 1;</script><p>b</p>` with the expected Source_Text "a b" and with "var x" absent from the Source_Text.
+10. THE Normalizer test suite SHALL include the regression input `x<y and y>z`, for which the Tag_Stripper output SHALL equal the input unchanged, the returned unrecognised tag names SHALL be exactly `y`, and THE Pipeline SHALL log `y` once; this is the case that exercises criterion 2.14 on text that is not a tag.
+11. THE test suite SHALL include a property test that every member of the Block_Tag_Set is a member of the Known_Tag_Set.
 
 ### Requirement 15: Configuration and dependency limits
 

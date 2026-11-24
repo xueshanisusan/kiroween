@@ -27,7 +27,7 @@ Campus news is long text on a portal nobody opens. Students who can't or won't l
 
 **Tests and fixtures**
 - Property tests: `length.ts` (word and character budgets) and the grounding check (a script missing any source entity is rejected; one containing every entity passes).
-- MIT text is not committed. `content/fixtures/*.xml` is gitignored (`git ls-files content` was empty, so nothing needs removing). Commit `scripts/fetch-fixture.ts` and a hand-written `content/fixtures/synthetic-3-items.xml`. Tests use the synthetic file only.
+- MIT text is not committed going forward. `content/fixtures/*.xml` is gitignored, with `content/fixtures/synthetic-*.xml` excepted. The snapshot was committed early and has since been untracked; real snapshots are gitignored, the synthetic fixture is committed. Commit `scripts/fetch-fixture.ts` and a hand-written `content/fixtures/synthetic-3-items.xml`. Tests use the synthetic file only.
 
 ## Non-goals
 Keypad skip, per-story playback, article scraping, the 10-minute freshness target, lede-verbatim fallback, Postgres, S3, queue or broker, multi-campus demo, accounts, personalization, non-English, caller audio, committing MIT text.
@@ -54,8 +54,6 @@ Keypad skip, per-story playback, article scraping, the 10-minute freshness targe
 - OPEN: Voice provider. OPEN: LLM provider. OPEN: Web player design (subject to the accessibility bullets). The static phone MP3 depends on the voice choice.
 - Meaning drift ("proposed" vs "approved") remains possible. The opening-paragraph rule reduces it, and the entity check cannot catch it. Do a human read of the demo briefing.
 - Words-to-seconds assumes 150 wpm. Check the real MP3 duration against the 60 s floor.
-- HTML stripping needs a hand-written strip or a dependency line in `tech.md`.
-- Steering files still contain superseded lines (10 minutes, skip, Postgres, S3). You are updating them.
 
 ## Spec breakdown (build order: 1, then 2 and 3 in parallel)
 1. **briefing-pipeline** (feature spec): ingest, select, summarize, grounding, publish. One headless pipeline sharing the synthetic fixture and the PBT boundary. The only writer of episode files. Imports nothing from web or telephony.
