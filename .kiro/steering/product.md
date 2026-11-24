@@ -32,7 +32,7 @@ Secondary: a screen-reader user who wants the day's news as one linear audio str
 
 1. Ingest campus RSS feed(s).
 2. Extract full article text (feeds usually carry only an excerpt).
-3. Summarize into a spoken script of 60–120 s, neutral tone, source attributed.
+3. Summarize into a spoken script of 60–120 s, neutral tone, outlet and date stated once in the intro.
 4. Synthesize one MP3 per campus per day.
 5. Student hears one continuous briefing MP3. No keypad interaction in v1. Scripts are stored per story and concatenated at publish time, so adding skip later is a playback change, not a data migration.
 
@@ -44,9 +44,9 @@ Two performance requirements that shape everything:
 ## Hard constraints
 
 - **Length is a feature.** 60–120 s ≈ 150–300 English words at 150 wpm. A 400-word script is a defect.
-- **No invented facts.** Every sentence traces to source text. If extraction is thin or a claim can't be grounded, read the article's lede verbatim and say so. Never fill a gap with plausible background — this is news, not content.
+- **No invented facts.** Every sentence traces to source text. If extraction is thin or a claim can't be grounded, drop the story. If no story survives, or the final script is under 150 words, publish nothing. Never fill a gap with plausible background — this is news, not content.
 - **Audio alone must be sufficient.** No information may live only in a visual UI.
-- **Attribution always.** Each story names its source and publish date on air.
+- **Attribution once.** The intro states the outlet and date once. A story names its source only when attributing a specific claim.
 - **One briefing per campus per day, cached** — not regenerated per caller.
 
 ## Demo source (decided)

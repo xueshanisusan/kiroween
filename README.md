@@ -2,6 +2,51 @@
 
 ## What Is This?
 
+## How To Use KIRO
+
+This section is for my fellow teammates.
+
+Kiro's behavior is already configured in files under `.kiro/`, so you don't have to worry about prompting the behavior.
+
+Read this before your first session:
+
+### 1. What is in `.kiro/`
+
+| Path | What it is | Who edits it |
+| --- | --- | --- |
+| `.kiro/steering/product.md` | Why the product exists, v1 scope, hard constraints, non-goals | Rarely, and deliberately |
+| `.kiro/steering/tech.md` | Decided stack, provisional choices, forbidden patterns | When a technical decision changes |
+| `.kiro/steering/structure.md` | Module layout and layering rules | When the shape of the code changes |
+| `.kiro/specs/briefing-pipeline/` | requirements.md → design.md → tasks.md | Through the spec workflow only |
+| `.kiro/hooks/` | Automated triggers (lint, guards, context injection) | When a workflow repeats |
+| `docs/brief.md` | Scoping decisions and their reasoning. Not steering. | During scoping |
+
+### 2. The order of operations
+
+1. Steering: it indicates the scope and constraints of the project. It will only be written once, and amended rarely.
+2. Brief: I brainstorm the idea with Kiro and generate the `doc/brief.md` file. Kiro will point out all the arguments behind each decision.
+3. Spec: one spec per feature. When you want to implement a feature, click on the Spec button first!
+4. Design: where trade-offs and rejected alternatives are recorded.
+5. Tasks: run the first two or three one at a time and review each.
+
+I also noticed Kiro IDE uses cloud sessions, so you have to commit and push `./kiro` **before** starting a cloud session.
+
+### 3. Reviewing a spec
+
+Do not read `requirements.md` line by line; you will waste a lot of time. Instead, ask the agent to audit its own output, and only judge the report. Here's an example prompt:
+
+> Do not rewrite anything. Report:
+> 1. Every acceptance criterion containing a subjective adjective (reasonable, appropriate, fast, sufficient). Quote the line.
+> 2. Every requirement that touches something outside this spec's boundary.
+> 3. A table of every number in requirements.md, what it constrains, and whether it matches the value in docs/brief.md.
+> 4. Every acceptance criterion that cannot be checked without reading the implementation.
+
+Then use the Review button on the file to leave inline comments to the specific paragraphs, and send them in one batch.
+
+### 4. Known gaps
+
+Kiro cannot automatically read the steering files. I wrote an `AGENTS.md` to include the steering files so Kiro has higher possibility to read the files -- but it's not always working. So when you start a new session, while Kiro generates its thinking and responses, keep an eye out on "did Kiro read the steering files?".
+
 ## Keep In Mind!
 
 Here's something the event details said:
