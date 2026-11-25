@@ -137,21 +137,21 @@ Rules that apply to every task:
     - Prerequisites: tasks 1, 6.1 and 6.2
     - _Requirements: 3.2, 3.3, 3.4, 3.5, 6.2_
 
-- [ ] 7. Length_Module
-  - [ ] 7.1 Implement `src/length/length.ts`
+- [x] 7. Length_Module
+  - [x] 7.1 Implement `src/length/length.ts`
     - `wordCount` (split on whitespace), `isAcceptableLength(totalWords, finalStoryCount)` true iff 150 <= words <= budget (290, 275, 200)
     - Pure, no I/O, clock or randomness
     - Prerequisite: task 4.1
     - _Requirements: 8.1, 8.3, 8.4, 8.5, 8.6, 8.8_
 
-  - [ ] 7.2 Write property test for the length budget (Property 11)
+  - [x] 7.2 Write property test for the length budget (Property 11)
     - **Property 11: Length acceptance predicate matches the exact budget range**
     - `// Feature: briefing-pipeline, Property 11: Length acceptance predicate matches the exact budget range`
     - fast-check with `PROPERTY_TEST_RUNS` runs; word counts around and across 150 and each budget, for story counts 1, 2 and 3. Put the Property 10 additivity assertions in this test file as plain example assertions, not a second property test. This is one of exactly six property-based tests
     - Prerequisites: tasks 1 and 7.1
     - **Validates: Requirements 8.4, 8.5, 8.7, 8.8, 14.3**
 
-  - [ ] 7.3 Write example tests for length thresholds
+  - [x] 7.3 Write example tests for length thresholds
     - Floor at 149, 150 and 151 words; ceiling at budget and budget + 1 for each story count
     - Prerequisites: tasks 1 and 7.1
     - _Requirements: 8.4, 8.5, 8.8_
