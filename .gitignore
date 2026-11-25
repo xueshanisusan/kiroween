@@ -1,2 +1,4 @@
 content/fixtures/*.xml
 !content/fixtures/synthetic-*.xml
+
+node_modules/

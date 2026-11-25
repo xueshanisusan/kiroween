@@ -13,7 +13,7 @@ Rules that apply to every task:
 
 ## Tasks
 
-- [ ] 1. BLOCKING: Write the synthetic fixture
+- [x] 1. BLOCKING: Write the synthetic fixture
   - Hand-write `content/fixtures/synthetic-3-items.xml`: an RSS 2.0 document with the `content` namespace and three fake items shaped like real MIT News items (`guid`, `title`, `pubDate`, `content:encoded`)
   - `content:encoded` bodies hold realistic HTML: at least one `<p>`, one `<a>`, one `<img>` with a `data-caption` attribute, and at least one character entity (for example `&mdash;` and `&amp;`)
   - Each body must be at least 500 characters of text after stripping, so no item is too thin; use plain invented text with some numbers, a date and capitalized names so grounding tests have material. Use `pubDate` values in 2026-11 so the Selector tests have stable dates
@@ -21,7 +21,7 @@ Rules that apply to every task:
   - No test in this plan can run before this file exists
   - _Requirements: 14.1, 14.2, 1.2, 2.1_
 
-- [ ] 2. Project scaffolding and gitignore check
+- [x] 2. Project scaffolding and gitignore check
   - Create `package.json` (`"type": "module"`, Node 22 engines, scripts for `test` as `vitest --run`, and `typecheck`), `tsconfig.json` (strict, ESM, NodeNext), and a Vitest config
   - Dependencies: `rss-parser` as the only runtime dependency; dev dependencies `typescript`, `vitest`, `fast-check`, `@types/node`, `tsx`. Add no other runtime dependency
   - Create the `src/` layout from design.md: `config/`, `ingest/`, `select/`, `summarize/`, `ground/`, `length/`, `tts/`, `publish/`, `pipeline/`, `lib/`, plus `scripts/` and `test/helpers/`
@@ -30,37 +30,37 @@ Rules that apply to every task:
   - Prerequisite: task 1
   - _Requirements: 14.1, 15.2, 15.3_
 
-- [ ] 3. Manual-audit tool `scripts/fetch-fixture.ts`
+- [x] 3. Manual-audit tool `scripts/fetch-fixture.ts`
   - MANUAL AUDIT TOOL ONLY. It is NOT part of the test suite. No test imports it, runs it, or reads the files it writes
   - A human runs it outside tests to download a real feed snapshot into `content/fixtures/` (for example `mit-<date>.xml`) for local inspection. Use plain `fetch`, not `src/lib/http.ts`
   - The snapshot is covered by the gitignore rule `content/fixtures/*.xml` and is never committed
   - Prerequisite: task 2
   - _Requirements: 14.1, 14.2_
 
-- [ ] 4. Configuration constants and pinned tables
-  - [ ] 4.1 Create `src/types.ts` and `src/config/*` constants
+- [x] 4. Configuration constants and pinned tables
+  - [x] 4.1 Create `src/types.ts` and `src/config/*` constants
     - `Result<T, E>` type in `src/types.ts`
     - Config constants, each with a unit comment: campus name, Feed URL, `CAMPUS_TIMEZONE`, voice id, greeting text, speaking rate 150 words per minute, story word targets (85, 120, 165), intro 20 and outro 15 words, Length_Budget per story count (290, 275, 200), 150-word floor, `TOO_THIN_THRESHOLD` 500, story count cap 3, `PROPERTY_TEST_RUNS` 100, `HTTP_RETRY_COUNT` 1, `MIN_EPISODE_SECONDS` 60, `BUILD_BUDGET_SECONDS` 300, `BUILD_LOCK_GRACE_SECONDS` 60, cron interval 1200
     - `src/config/tts-format.ts` with `ASSUMED_TTS_AUDIO_FORMAT` exactly as in design.md (MPEG-2, Layer III, 24000 Hz, mono, bitrateMode note, `fakeBitrateKbps` 48)
     - Prerequisite: task 2
     - _Requirements: 15.1, 15.5, 8.2, 11.13, 12.1_
 
-  - [ ] 4.2 Create the tag, entity, stoplist and lexicon constants
+  - [x] 4.2 Create the tag, entity, stoplist and lexicon constants
     - `src/config/tags.ts`: `KNOWN_TAG_SET` and `BLOCK_TAG_SET` exactly as listed in the Glossary
     - `src/config/entities.ts`: the pinned named-entity table (amp, lt, gt, quot, apos, nbsp to U+0020, mdash, ndash, lsquo, rsquo, ldquo, rdquo, hellip)
     - `src/config/grounding.ts`: `SENTENCE_STARTER_STOPLIST` and `NUMBER_LEXICON` (two through ninety, hundred, thousand, million; "one" excluded)
     - Prerequisite: task 4.1
     - _Requirements: 2.1, 2.8, 2.16, 5.1, 5.3, 5.4_
 
-  - [ ] 4.3 Write property test for Block_Tag_Set subset (Property 8)
+  - [x] 4.3 Write property test for Block_Tag_Set subset (Property 8)
     - **Property 8: Block_Tag_Set is a subset of Known_Tag_Set**
     - `// Feature: briefing-pipeline, Property 8: Block_Tag_Set is a subset of Known_Tag_Set`
     - fast-check with `PROPERTY_TEST_RUNS` runs, quantified over every member of `BLOCK_TAG_SET`. This is one of exactly six property-based tests
     - Prerequisites: tasks 1 and 4.2
     - **Validates: Requirements 2.16, 14.11**
 
-- [ ] 5. Normalizer (A1 Tag_Stripper, B Entity_Decoder, A2 Whitespace_Normalizer)
-  - [ ] 5.1 Implement `stripTags` in `src/ingest/normalize.ts`
+- [~] 5. Normalizer (A1 Tag_Stripper, B Entity_Decoder, A2 Whitespace_Normalizer)
+  - [x] 5.1 Implement `stripTags` in `src/ingest/normalize.ts`
     - Single left-to-right pass per the design's A1 algorithm: block tags give one space, other known tags give nothing, `script`/`style`/comment removed with contents and no space, unknown tag-shaped text preserved and its name reported, stray `<` literal
     - Quote-aware search for the closing `>` and for `</script>`/`</style>`
     - Unclosed `script`, `style` or `<!--` drops to end of input and returns `{ name, offset }`
@@ -68,7 +68,7 @@ Rules that apply to every task:
     - Prerequisite: task 4.2
     - _Requirements: 2.1, 2.3, 2.4, 2.5, 2.10, 2.13, 2.14, 2.15_
 
-  - [ ] 5.2 Implement `decodeEntities` in `src/ingest/normalize.ts`
+  - [x] 5.2 Implement `decodeEntities` in `src/ingest/normalize.ts`
     - Single pass: decimal and hex numeric references plus the pinned named table; `&nbsp;` to U+0020
     - Unknown named references copied unchanged and reported in `unrecognisedEntities`
     - Numeric references above 0x10FFFF, in 0xD800 to 0xDFFF, or equal to 0 copied unchanged and reported in `invalidNumericRefs`
@@ -76,7 +76,7 @@ Rules that apply to every task:
     - Prerequisite: task 5.1 (same file)
     - _Requirements: 2.6, 2.7, 2.8_
 
-  - [ ] 5.3 Implement `normalizeWhitespace` and `normalize` in `src/ingest/normalize.ts`
+  - [-] 5.3 Implement `normalizeWhitespace` and `normalize` in `src/ingest/normalize.ts`
     - `normalizeWhitespace` collapses runs of U+0020, tab, LF, CR, FF, VT and U+00A0 to one space and trims
     - `normalize` composes A1, then B, then A2, each exactly once, in that order, and returns a `NormalizeReport` with the Source_Text and all reported side data
     - Prerequisite: task 5.2 (same file)

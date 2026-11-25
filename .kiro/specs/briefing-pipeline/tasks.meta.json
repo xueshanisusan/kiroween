@@ -1,0 +1,115 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. BLOCKING: Write the synthetic fixture": [
+      {
+        "executionId": "07076a1a-d0cd-4e46-8a15-ac0249e76c82",
+        "chatSessionId": "sess_30232faa-dfdd-42a8-b5ed-c83a1f331471",
+        "timestamp": 1795567891077
+      },
+      {
+        "executionId": "07076a1a-d0cd-4e46-8a15-ac0249e76c82",
+        "chatSessionId": "sess_30232faa-dfdd-42a8-b5ed-c83a1f331471",
+        "timestamp": 1795567965788
+      }
+    ],
+    "2. Project scaffolding and gitignore check": [
+      {
+        "executionId": "d05ba186-84a3-4363-89ff-99d222c9abbf",
+        "chatSessionId": "sess_c25f734d-489b-4c3d-96de-9c4a3cf679bb",
+        "timestamp": 1795568193809
+      },
+      {
+        "executionId": "d05ba186-84a3-4363-89ff-99d222c9abbf",
+        "chatSessionId": "sess_c25f734d-489b-4c3d-96de-9c4a3cf679bb",
+        "timestamp": 1795568330436
+      }
+    ],
+    "3. Manual-audit tool `scripts/fetch-fixture.ts`": [
+      {
+        "executionId": "85561563-51a7-4ae4-8903-301f2fa47428",
+        "chatSessionId": "sess_cfa12e4c-45c6-46be-bda3-0585372df3ce",
+        "timestamp": 1795568342617
+      },
+      {
+        "executionId": "85561563-51a7-4ae4-8903-301f2fa47428",
+        "chatSessionId": "sess_cfa12e4c-45c6-46be-bda3-0585372df3ce",
+        "timestamp": 1795568378417
+      }
+    ],
+    "4.1 Create `src/types.ts` and `src/config/*` constants": [
+      {
+        "executionId": "9d5c97fe-5144-420b-b531-1875fcf2d331",
+        "chatSessionId": "sess_9277dcc0-bafa-4a93-b3a9-3c6794095204",
+        "timestamp": 1795582017465
+      },
+      {
+        "executionId": "9d5c97fe-5144-420b-b531-1875fcf2d331",
+        "chatSessionId": "sess_9277dcc0-bafa-4a93-b3a9-3c6794095204",
+        "timestamp": 1795582318727
+      }
+    ],
+    "4.2 Create the tag, entity, stoplist and lexicon constants": [
+      {
+        "executionId": "9d5c97fe-5144-420b-b531-1875fcf2d331",
+        "chatSessionId": "sess_9277dcc0-bafa-4a93-b3a9-3c6794095204",
+        "timestamp": 1795582319216
+      },
+      {
+        "executionId": "9d5c97fe-5144-420b-b531-1875fcf2d331",
+        "chatSessionId": "sess_9277dcc0-bafa-4a93-b3a9-3c6794095204",
+        "timestamp": 1795582442743
+      }
+    ],
+    "4.3 Write property test for Block_Tag_Set subset (Property 8)": [
+      {
+        "executionId": "9d5c97fe-5144-420b-b531-1875fcf2d331",
+        "chatSessionId": "sess_9277dcc0-bafa-4a93-b3a9-3c6794095204",
+        "timestamp": 1795582444972
+      },
+      {
+        "executionId": "9d5c97fe-5144-420b-b531-1875fcf2d331",
+        "chatSessionId": "sess_9277dcc0-bafa-4a93-b3a9-3c6794095204",
+        "timestamp": 1795583106128
+      }
+    ],
+    "4. Configuration constants and pinned tables": [
+      {
+        "executionId": "9d5c97fe-5144-420b-b531-1875fcf2d331",
+        "chatSessionId": "sess_9277dcc0-bafa-4a93-b3a9-3c6794095204",
+        "timestamp": 1795583106330
+      }
+    ],
+    "5.1 Implement `stripTags` in `src/ingest/normalize.ts`": [
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795583774944
+      },
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795584899476
+      }
+    ],
+    "5.2 Implement `decodeEntities` in `src/ingest/normalize.ts`": [
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795584900141
+      },
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795584932273
+      }
+    ],
+    "5.3 Implement `normalizeWhitespace` and `normalize` in `src/ingest/normalize.ts`": [
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795584931759
+      }
+    ]
+  }
+}
