@@ -1,5 +1,10 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "5.4 Write property test for Tag_Stripper provenance (Property 1)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795587051287
+    }
+  },
   "executionHistory": {
     "1. BLOCKING: Write the synthetic fixture": [
       {
@@ -109,6 +114,54 @@
         "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
         "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
         "timestamp": 1795584931759
+      },
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795587006520
+      }
+    ],
+    "5.4 Write property test for Tag_Stripper provenance (Property 1)": [
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795587007272
+      },
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795587057084
+      }
+    ],
+    "5.5 Write example tests for the Tag_Stripper": [
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795587007778
+      },
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795587057590
+      }
+    ],
+    "5.6 Write example tests for the Entity_Decoder and `normalize`": [
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795587008292
+      },
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795587058220
+      }
+    ],
+    "5. Normalizer (A1 Tag_Stripper, B Entity_Decoder, A2 Whitespace_Normalizer)": [
+      {
+        "executionId": "dfc7dcbe-b54f-4dc2-b049-ecc5ed345bba",
+        "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
+        "timestamp": 1795587058374
       }
     ]
   }

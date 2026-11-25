@@ -59,7 +59,7 @@ Rules that apply to every task:
     - Prerequisites: tasks 1 and 4.2
     - **Validates: Requirements 2.16, 14.11**
 
-- [~] 5. Normalizer (A1 Tag_Stripper, B Entity_Decoder, A2 Whitespace_Normalizer)
+- [x] 5. Normalizer (A1 Tag_Stripper, B Entity_Decoder, A2 Whitespace_Normalizer)
   - [x] 5.1 Implement `stripTags` in `src/ingest/normalize.ts`
     - Single left-to-right pass per the design's A1 algorithm: block tags give one space, other known tags give nothing, `script`/`style`/comment removed with contents and no space, unknown tag-shaped text preserved and its name reported, stray `<` literal
     - Quote-aware search for the closing `>` and for `</script>`/`</style>`
@@ -76,13 +76,13 @@ Rules that apply to every task:
     - Prerequisite: task 5.1 (same file)
     - _Requirements: 2.6, 2.7, 2.8_
 
-  - [-] 5.3 Implement `normalizeWhitespace` and `normalize` in `src/ingest/normalize.ts`
+  - [x] 5.3 Implement `normalizeWhitespace` and `normalize` in `src/ingest/normalize.ts`
     - `normalizeWhitespace` collapses runs of U+0020, tab, LF, CR, FF, VT and U+00A0 to one space and trims
     - `normalize` composes A1, then B, then A2, each exactly once, in that order, and returns a `NormalizeReport` with the Source_Text and all reported side data
     - Prerequisite: task 5.2 (same file)
     - _Requirements: 2.2, 2.3, 2.4, 2.9, 2.11, 2.12_
 
-  - [ ] 5.4 Write property test for Tag_Stripper provenance (Property 1)
+  - [x] 5.4 Write property test for Tag_Stripper provenance (Property 1)
     - **Property 1: Tag_Stripper character provenance**
     - `// Feature: briefing-pipeline, Property 1: Tag_Stripper character provenance`
     - fast-check with `PROPERTY_TEST_RUNS` runs. Generator mixes plain text, known tags (block and non-block, mixed case), unknown tag-shaped fragments, stray `<`, quoted attribute values containing `<` and `>`, and whitespace runs including U+00A0
@@ -91,7 +91,7 @@ Rules that apply to every task:
     - Prerequisites: tasks 1 and 5.3
     - **Validates: Requirements 2.1, 2.5, 2.10, 2.14, 14.7, 14.8**
 
-  - [ ] 5.5 Write example tests for the Tag_Stripper
+  - [x] 5.5 Write example tests for the Tag_Stripper
     - Literal regression inputs: `<<b>b>` gives `<b>`; `<p>end.</p><p>Next</p>` gives `end. Next` through `normalize`; `<p>a</p><script>var x = 1;</script><p>b</p>` gives `a b` with `var x` absent; `x<y and y>z` unchanged with `unknownTagNames` exactly `["y"]` (Property 2)
     - Unclosed `script`, unclosed `style` and unclosed `<!--`: output drops to end of input and the element name and offset are returned
     - Quote-aware tag end: `<img data-caption="a > b">text` leaves only `text`, and an unterminated quote makes `<` literal
@@ -101,7 +101,7 @@ Rules that apply to every task:
     - Prerequisites: tasks 1 and 5.3
     - _Requirements: 2.1, 2.10, 2.13, 2.14, 2.15, 14.7, 14.8, 14.9, 14.10_
 
-  - [ ] 5.6 Write example tests for the Entity_Decoder and `normalize`
+  - [x] 5.6 Write example tests for the Entity_Decoder and `normalize`
     - Every entity in the pinned table decodes to its mapped character
     - Unknown named reference `&foo;` preserved and reported once (Property 3)
     - Invalid numeric references (`&#0;`, `&#xD800;`, `&#x110000;`) preserved and reported
