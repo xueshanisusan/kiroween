@@ -163,6 +163,61 @@
         "chatSessionId": "sess_0ea9c908-e223-40c4-8502-b171f5a4da63",
         "timestamp": 1795587058374
       }
+    ],
+    "6.1 Implement `select` in `src/select/select.ts`": [
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795587197819
+      },
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795587227869
+      }
+    ],
+    "6.2 Implement the too-thin rule in `src/select/too-thin.ts`": [
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795587198352
+      },
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795587228397
+      }
+    ],
+    "6.3 Write property test for Selector invariants (Property 9)": [
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795587230292
+      },
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795636473288
+      }
+    ],
+    "6.4 Write example tests for the Selector and too-thin rule": [
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795587230875
+      },
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795636472894
+      }
+    ],
+    "6. Selector and too-thin rule": [
+      {
+        "executionId": "e26a088a-d61e-4154-a546-98f170898004",
+        "chatSessionId": "sess_043b388c-5191-443e-8cb7-2d76ed37435a",
+        "timestamp": 1795636473405
+      }
     ]
   }
 }

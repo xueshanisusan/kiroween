@@ -113,25 +113,25 @@ Rules that apply to every task:
     - Prerequisites: tasks 1 and 5.3
     - _Requirements: 2.2, 2.6, 2.7, 2.8, 2.9, 2.1_
 
-- [ ] 6. Selector and too-thin rule
-  - [ ] 6.1 Implement `select` in `src/select/select.ts`
+- [x] 6. Selector and too-thin rule
+  - [x] 6.1 Implement `select` in `src/select/select.ts`
     - Pure, takes `now` and `campusTimezone`; 48-hour window, widen to 7 days when fewer than 3, ignore future items, tie-break by `guid` ascending, at most 3, `coveredDates` in Campus_Timezone only when widened, empty when nothing within 7 days
     - Prerequisite: task 4.1
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
 
-  - [ ] 6.2 Implement the too-thin rule in `src/select/too-thin.ts`
+  - [x] 6.2 Implement the too-thin rule in `src/select/too-thin.ts`
     - Pure predicate: Source_Text shorter than `TOO_THIN_THRESHOLD` is thin
     - Prerequisite: task 4.1
     - _Requirements: 6.2_
 
-  - [ ] 6.3 Write property test for Selector invariants (Property 9)
+  - [x] 6.3 Write property test for Selector invariants (Property 9)
     - **Property 9: Selector invariants**
     - `// Feature: briefing-pipeline, Property 9: Selector invariants`
     - fast-check with `PROPERTY_TEST_RUNS` runs; random item lists (duplicate and future `pubDate`s included) and random `now`. Items may be built from the fixture's shape. This is one of exactly six property-based tests
     - Prerequisites: tasks 1 and 6.1
     - **Validates: Requirements 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 14.4**
 
-  - [ ] 6.4 Write example tests for the Selector and too-thin rule
+  - [x] 6.4 Write example tests for the Selector and too-thin rule
     - Items parsed from the fixture feed select newest first; widening example returns `coveredDates`; tie-break by `guid`
     - Too_Thin_Threshold boundaries at 499, 500 and 501 characters
     - Prerequisites: tasks 1, 6.1 and 6.2
