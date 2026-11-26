@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
-import { PROPERTY_TEST_RUNS } from "./index";
-import { BLOCK_TAG_SET, KNOWN_TAG_SET } from "./tags";
+import { PROPERTY_TEST_RUNS } from "./index.js";
+import { BLOCK_TAG_SET, KNOWN_TAG_SET } from "./tags.js";
 
 describe("tag sets", () => {
   // Feature: briefing-pipeline, Property 8: Block_Tag_Set is a subset of Known_Tag_Set
