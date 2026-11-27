@@ -756,6 +756,18 @@
         "chatSessionId": "sess_e9a286d8-ef24-4134-b65d-b6264ff3d941",
         "timestamp": 1795670430080
       }
+    ],
+    "13.6 Replace the Polly adapter with a local Piper and ffmpeg adapter": [
+      {
+        "executionId": "13dc4a8b-237f-4d87-8d75-e4484bce9e38",
+        "chatSessionId": "sess_e6364311-7622-4e77-ab76-26064e1afbea",
+        "timestamp": 1795809457935
+      },
+      {
+        "executionId": "13dc4a8b-237f-4d87-8d75-e4484bce9e38",
+        "chatSessionId": "sess_e6364311-7622-4e77-ab76-26064e1afbea",
+        "timestamp": 1795809860013
+      }
     ]
   }
 }

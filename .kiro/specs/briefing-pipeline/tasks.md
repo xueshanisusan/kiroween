@@ -269,7 +269,7 @@ Rules that apply to every task:
     - Prerequisites: tasks 1, 10.1, 13.1 and 13.2
     - _Requirements: 9.4, 9.5, 9.6, 9.7, 14.5_
 
-  - [ ] 13.6 Replace the Polly adapter with a local Piper and ffmpeg adapter
+  - [x] 13.6 Replace the Polly adapter with a local Piper and ffmpeg adapter
     - In `src/tts/tts.ts`, replace `PollyClient`, `buildPollyRequest`, `createPollyAdapter` and `createEnvPollyClient` with an adapter that runs `piper` (script on stdin, WAV to a temp file) and then `ffmpeg` (WAV to one MP3), through an injected process runner so tests need no binary
     - ffmpeg arguments always include `-ar` from `ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz`, `-ac` from `channels`, `-c:a libmp3lame` and `-b:a` from `fakeBitrateKbps`; arguments passed as an array, no shell; one non-streaming call; abort signal kills the child process; temp files removed on success and failure
     - Piper binary, ffmpeg binary, voice model path and voice id come from `src/config/`; no credentials or environment secrets

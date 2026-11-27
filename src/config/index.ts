@@ -7,8 +7,17 @@ export const FEED_URLS = ["https://news.mit.edu/rss/feed"] as const;
 /** Campus timezone used to decide what "today" is (IANA timezone name). */
 export const CAMPUS_TIMEZONE = "America/New_York";
 
-/** TTS voice id (provider voice name, provisional: Amazon Polly neural voice). */
-export const VOICE_ID = "Joanna";
+/** TTS voice id: the Piper voice name, also the model file's base name (text). */
+export const VOICE_ID = "en_US-lessac-medium";
+
+/** Piper executable, looked up on PATH (command name or absolute path). */
+export const PIPER_BINARY = "piper";
+
+/** ffmpeg executable, looked up on PATH (command name or absolute path). */
+export const FFMPEG_BINARY = "ffmpeg";
+
+/** Directory holding Piper voice models; the model is `<dir>/<voice id>.onnx` (directory path). */
+export const PIPER_VOICE_MODEL_DIR = "models/piper";
 
 /** Greeting spoken at the start of the intro (text). */
 export const GREETING_TEXT = "Good morning";
