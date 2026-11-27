@@ -262,13 +262,22 @@ Rules that apply to every task:
     - Prerequisites: tasks 1, 13.1 and 13.2
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 9.7_
 
-  - [x] 13.5 Implement `src/tts/tts.ts` with the fake adapter and the pinned Polly request, and write example tests
+  - [x] 13.5 Implement `src/tts/tts.ts` with the fake adapter and the pinned Polly request, and write example tests (superseded by 13.6: Polly replaced by local Piper)
     - `TtsAdapter` interface; fake adapter returns default MP3 variant (d) (about 35 seconds) built from `ASSUMED_TTS_AUDIO_FORMAT`
     - Polly adapter request builder sets `OutputFormat` `"mp3"`, `Engine` `"neural"` and `SampleRate` equal to `String(ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz)` on every request; one non-streaming call; credentials from environment only; typed `TtsError` on failure
     - Example tests with a fake Polly client: `Engine` is `"neural"` and `SampleRate` is `"24000"`; changing the constant changes the request; failure after retry gives a typed error
     - Prerequisites: tasks 1, 10.1, 13.1 and 13.2
     - _Requirements: 9.4, 9.5, 9.6, 9.7, 14.5_
 
+  - [ ] 13.6 Replace the Polly adapter with a local Piper and ffmpeg adapter
+    - In `src/tts/tts.ts`, replace `PollyClient`, `buildPollyRequest`, `createPollyAdapter` and `createEnvPollyClient` with an adapter that runs `piper` (script on stdin, WAV to a temp file) and then `ffmpeg` (WAV to one MP3), through an injected process runner so tests need no binary
+    - ffmpeg arguments always include `-ar` from `ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz`, `-ac` from `channels`, `-c:a libmp3lame` and `-b:a` from `fakeBitrateKbps`; arguments passed as an array, no shell; one non-streaming call; abort signal kills the child process; temp files removed on success and failure
+    - Piper binary, ffmpeg binary, voice model path and voice id come from `src/config/`; no credentials or environment secrets
+    - Typed `TtsError` on spawn failure, non-zero exit or abort; retry `HTTP_RETRY_COUNT` times
+    - Update `scripts/build-briefing.ts` to wire the new adapter; rewrite the Polly tests in `src/tts/tts.test.ts` as example tests with a fake runner: arguments carry the constant values, a changed constant changes the arguments, failure after retry gives a typed error, abort kills the process
+    - Update `src/config/tts-format.ts` comments; add Piper and ffmpeg install steps to `README.md`; keep the fake adapter and all pipeline tests unchanged and passing
+    - Prerequisite: task 13.5
+    - _Requirements: 9.4, 9.5, 9.6, 9.7, 14.5, 15.1_
 - [x] 14. Checkpoint - adapters complete
   - Ensure all tests pass, ask the user if questions arise.
 
@@ -334,12 +343,12 @@ Rules that apply to every task:
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 18. Manual audit of real TTS output
-  - [~] 18.1 Compare a real TTS MP3 with an independent tool
-    - MANUAL and optional. Not part of the test suite. Run only after the real TTS adapter exists and credentials are available; commit no audio
-    - Synthesize one real MP3, measure it with `measureMp3DurationSeconds`, and compare with `ffprobe`
+  - [ ] 18.1 Compare a real TTS MP3 with an independent tool
+    - MANUAL and optional. Not part of the test suite. Run only after task 13.6 and with `piper`, a voice model, `ffmpeg` and `ffprobe` installed. No credentials are needed; commit no audio
+    - Synthesize one real MP3 with the Piper and ffmpeg adapter, measure it with `measureMp3DurationSeconds`, and compare with `ffprobe`
     - Record the real MPEG version, layer, sample rate, channels, and bitrate mode (CBR or VBR, and the bitrate)
     - If any value differs from `ASSUMED_TTS_AUDIO_FORMAT`, update that constant (the default fake follows automatically) and re-run the tests
-    - Prerequisite: task 13.5
+    - Prerequisite: task 13.6
     - _Requirements: 9.8, 14.5_
 
 ## Notes
@@ -373,7 +382,8 @@ Rules that apply to every task:
     { "id": 15, "tasks": ["15.4"] },
     { "id": 16, "tasks": ["16.1", "16.2", "16.3", "16.4"] },
     { "id": 17, "tasks": ["17"] },
-    { "id": 18, "tasks": ["18.1"] }
+    { "id": 18, "tasks": ["13.6"] },
+    { "id": 19, "tasks": ["18.1"] }
   ]
 }
 ```

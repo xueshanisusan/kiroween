@@ -295,43 +295,46 @@ interface TtsAdapter {
 }
 ```
 
-One implementation in v1 (provisional: Amazon Polly neural, per `tech.md`); the interface lets voice provider stay swappable (9.7). One non-streaming call returns one complete MP3 buffer (9.4).
+One implementation in v1: local Piper plus ffmpeg, per `tech.md`. The interface keeps the voice engine swappable (9.7). One non-streaming call returns one complete MP3 buffer (9.4).
 
-**Assumption (voice provider still open).** The voice provider is still OPEN and is decided after a listen test (per `tech.md`). For duration purposes the design assumes MPEG-2 Layer III, 24 kHz, mono. That is Amazon Polly's documented default sample rate for the neural engine (22.05 kHz, the standard-engine default, is also MPEG-2 Layer III). The Polly adapter must request the neural engine explicitly, because the engine defaults to standard when omitted. The duration parser is built against this assumption and the default fake TTS adapter derives from it. If the listen test picks a different provider, for example one that outputs 44.1 kHz, the parser still works because it reads each frame header instead of hardcoding a format; only `ASSUMED_TTS_AUDIO_FORMAT` and the default fake need updating. Source: AWS Polly SynthesizeSpeech documentation (SampleRate defaults: standard 22050, neural 24000), https://docs.aws.amazon.com/polly/latest/dg/API_SynthesizeSpeech.html.
+**Why local.** Polly and ElevenLabs cost money. Piper runs offline on the build host with no account or credentials, so the repo runs from a clean checkout. `piper` and `ffmpeg` are system binaries that the adapter starts with `child_process`. They are not npm packages, so the runtime dependency list does not change.
 
-#### Pinned Polly request
+**How the adapter works (one call, no streaming).**
 
-The Polly adapter SHALL set both of these parameters explicitly on every `SynthesizeSpeech` request, together with the MP3 output format (`OutputFormat = "mp3"`). It must not rely on the documented defaults:
+1. Start `piper` with the voice model from config. Write the script to its stdin and have it write one WAV file in a temp directory.
+2. Start `ffmpeg` to encode that WAV to MP3 with the pinned settings below. Write the MP3 to the temp directory.
+3. Read the MP3 into one `Buffer`, delete the temp files, and return the buffer.
+4. Either process exiting non-zero, failing to start (binary not found), or the abort signal firing gives a typed `TtsError`. The signal kills any running child process. A failure is retried `HTTP_RETRY_COUNT` times, then counts as a failed TTS call under criterion 9.6 and no Episode is published.
 
-- `Engine = "neural"`
-- `SampleRate = String(ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz)`, which is `"24000"`. The request and the constant therefore have one source.
+The binary names, voice model path and voice id come from `src/config/`, never from a module (15.1). The script text goes to Piper on stdin and never into a shell string, so script content cannot inject shell commands. Arguments are passed as an array with no shell.
 
-Reason: the assumed format comes from an assumption about provider behaviour. Pinning the request makes that assumption enforced instead of hoped for. If the request and the constant ever diverge, it must be because someone changed the constant, not because a vendor changed a default.
+#### Pinned ffmpeg encoding
 
-Two facts confirmed in the AWS Polly SynthesizeSpeech API reference (https://docs.aws.amazon.com/polly/latest/dg/API_SynthesizeSpeech.html):
+The adapter SHALL set all of these on every ffmpeg call. It must not rely on ffmpeg defaults or on the Piper model's native sample rate:
 
-1. The engine defaults to standard when `Engine` is omitted.
-2. The valid MP3 sample rates are 8000, 16000, 22050, 24000, 44100 and 48000 Hz, and the neural default is 24000.
+- `-ar String(ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz)`, which is `24000`. Piper voices differ in native rate (commonly 22050 Hz), so ffmpeg resamples.
+- `-ac String(ASSUMED_TTS_AUDIO_FORMAT.channels)`, which is `1`.
+- `-c:a libmp3lame` and `-b:a <fakeBitrateKbps>k`, which is `48k`, constant bitrate.
 
-Omitting `Engine` would give 22050 Hz, which is still MPEG-2 Layer III, so the constant would survive. The voice would not: a neural-only `voiceId` under the standard engine is an API error. The adapter returns that error as a typed `TtsError`, which is a failed TTS call under criterion 9.6, and no episode is published.
+Reason: the format is now chosen by us, not by a vendor, so the constant and the encoder have one source. An MP3 at 24000 Hz is MPEG-2 Layer III, which matches the constant. If the constant and the command ever diverge, someone changed the constant.
 
-Example test (not one of the six property tests): the adapter's request builder, tested with a fake client, always sets `Engine` to `"neural"` and `SampleRate` equal to `String(ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz)`, and a changed constant changes the request.
+Example test (not one of the six property tests): the argument builder always includes the sample rate, channel count and bitrate taken from the constant, and a changed constant changes the arguments. The tests use a fake process runner, so no real binary is needed and the suite stays offline.
 
 #### ASSUMED_TTS_AUDIO_FORMAT (`src/config/tts-format.ts`)
 
 ```ts
 export const ASSUMED_TTS_AUDIO_FORMAT = {
-  mpegVersion: "MPEG-2",          // MPEG audio version of the provider's MP3 frames (assumed, see Assumption above)
+  mpegVersion: "MPEG-2",          // MPEG audio version of the encoded MP3 frames (pinned by the ffmpeg arguments)
   layer: 3,                       // MPEG audio layer; 3 = Layer III
-  sampleRateHz: 24000,            // output sample rate in Hz (Polly neural default)
-  channels: 1,                    // 1 = mono; frame header channel mode "single channel"
+  sampleRateHz: 24000,            // output sample rate in Hz (ffmpeg -ar)
+  channels: 1,                    // 1 = mono (ffmpeg -ac); frame header channel mode "single channel"
   bitrateMode:
-    "unverified; the parser handles CBR and VBR per frame", // real mode of provider output NOT verified
-  fakeBitrateKbps: 48,            // CBR bitrate in kbit/s used ONLY to build the fake; not a claim about the provider
+    "unverified; the parser handles CBR and VBR per frame", // replace with the real result of audit task 18.1
+  fakeBitrateKbps: 48,            // CBR bitrate in kbit/s (ffmpeg -b:a) and the bitrate of the test fake
 } as const;
 ```
 
-The real bitrate mode and bitrate of the provider's MP3 output have NOT been verified. `fakeBitrateKbps` exists only so the test MP3 builder can produce frames, and the parser never reads it, because it takes each frame's bitrate from that frame's header.
+The name keeps "ASSUMED" until the audit (task 18.1) confirms with `ffprobe` that real output matches. The duration parser never reads these values, because it takes each frame's bitrate and sample rate from that frame's header.
 
 Worked example for this format: samples per frame is 576 (MPEG-2 Layer III), and frame length is `floor(72000 * bitrateKbps / sampleRateHz) + padding`. For 48 kbps at 24000 Hz that is `floor(72000 * 48 / 24000) = 144` bytes plus padding (0 or 1), and each frame lasts `576 / 24000 = 0.024` s (24 ms). About 35 s of audio is therefore about 1459 frames.
 

@@ -18,7 +18,7 @@ inclusion: always
 
 - RSS via `rss-parser`.
 - LLM: whichever we have credits for, hidden behind `summarize/summarize.ts`.
-- TTS: **OPEN — decide after a real listen test.** Requirements: one offline call produces the whole MP3 (no streaming), and the voice is intelligible over a phone speaker outdoors, not in a quiet room. Amazon Polly neural is the default candidate on cost, not a decision.
+- TTS: **Local Piper, decided.** No paid or credentialed service. The adapter runs the `piper` binary as a subprocess with a downloaded English voice model and writes a WAV, then `ffmpeg` encodes it to one MP3. One offline call produces the whole MP3 (no streaming). Reason: Polly and ElevenLabs cost money, and a local engine needs no account, so the repo runs from a clean checkout. Both binaries are system prerequisites, not npm packages, so no new runtime dependency is added. Requirement still open: the voice must be intelligible over a phone speaker outdoors, so confirm it with a listen test. Engine, voice model and MP3 encoding settings live in `src/config/`.
 
 ## Forbidden
 

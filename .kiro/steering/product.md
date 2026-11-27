@@ -81,7 +81,7 @@ campus, claim "swap the config, get another campus".
 ## OPEN QUESTIONS — Kiro: if a task depends on one of these, STOP and ask.
 - [x] Which campus, which feed URL? Official RSS, or scrape the news index?
 - [x] Phone number: Twilio trial number acceptable? Who owns it?
-- [ ] Voice: Polly neural vs ElevenLabs (quality vs cost/latency)?
+- [x] Voice: local Piper + ffmpeg (no cost, no credentials). Polly and ElevenLabs rejected on cost. Listen test over a phone speaker still pending.
 
 ## Submission requirements that affect the code
 
