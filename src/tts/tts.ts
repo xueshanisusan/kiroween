@@ -2,7 +2,14 @@ import { spawn } from "node:child_process";
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { FFMPEG_BINARY, HTTP_RETRY_COUNT, PIPER_BINARY, PIPER_VOICE_MODEL_DIR } from "../config/index.js";
+import {
+  FFMPEG_BINARY,
+  HTTP_RETRY_COUNT,
+  PIPER_BINARY,
+  PIPER_VOICE_MODEL_DIR,
+  TTS_RADIO_FILTER,
+  TTS_SENTENCE_SILENCE_SECONDS,
+} from "../config/index.js";
 import { ASSUMED_TTS_AUDIO_FORMAT } from "../config/tts-format.js";
 import type { Result } from "../types.js";
 
@@ -97,15 +104,19 @@ export function createSpawnRunner(spawnFn: SpawnFn = defaultSpawn): ProcessRunne
 }
 
 /** Piper arguments: reads the script from stdin, writes one WAV file. */
-export function buildPiperArgs(modelPath: string, wavPath: string): string[] {
-  return ["--model", modelPath, "--output_file", wavPath];
+export function buildPiperArgs(
+  modelPath: string,
+  wavPath: string,
+  sentenceSilenceSeconds: number = TTS_SENTENCE_SILENCE_SECONDS,
+): string[] {
+  return ["--model", modelPath, "--output_file", wavPath, "--sentence_silence", String(sentenceSilenceSeconds)];
 }
 
 /**
  * ffmpeg arguments. Sample rate, channels, codec and bitrate are always set
  * explicitly, never left to ffmpeg defaults or the voice model's native rate.
  */
-export function buildFfmpegArgs(wavPath: string, mp3Path: string): string[] {
+export function buildFfmpegArgs(wavPath: string, mp3Path: string, filter: string = TTS_RADIO_FILTER): string[] {
   return [
     "-nostdin",
     "-y",
@@ -113,6 +124,8 @@ export function buildFfmpegArgs(wavPath: string, mp3Path: string): string[] {
     "error",
     "-i",
     wavPath,
+    "-af",
+    filter,
     "-ar",
     String(ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz),
     "-ac",

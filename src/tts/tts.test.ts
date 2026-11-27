@@ -4,11 +4,13 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { FFMPEG_BINARY, PIPER_BINARY } from "../config/index.js";
+import { FFMPEG_BINARY, PIPER_BINARY, PIPER_VOICE_MODEL_DIR, TTS_RADIO_FILTER, TTS_SENTENCE_SILENCE_SECONDS, VOICE_ID } from "../config/index.js";
 import { ASSUMED_TTS_AUDIO_FORMAT } from "../config/tts-format.js";
 import { measureMp3DurationSeconds } from "../publish/duration.js";
 import { createFakeTtsAdapter } from "./fake.js";
 import {
+  buildFfmpegArgs,
+  buildPiperArgs,
   createLocalTtsAdapter,
   createSpawnRunner,
   type ProcessOutcome,
@@ -81,6 +83,23 @@ describe("local TTS adapter arguments", () => {
     } finally {
       Object.assign(fmt, original);
     }
+  });
+
+  it("passes the sentence pause, the voice model path and the radio filter", async () => {
+    const { runner, calls } = fakeRunner();
+    await createLocalTtsAdapter({ runner, tempRoot: root }).synthesize("x", VOICE_ID, signal);
+    const [piper, ffmpeg] = calls as [ProcessSpec, ProcessSpec];
+    expect(piper.args[piper.args.indexOf("--sentence_silence") + 1]).toBe(String(TTS_SENTENCE_SILENCE_SECONDS));
+    expect(TTS_SENTENCE_SILENCE_SECONDS).toBe(0.3);
+    expect(piper.args[piper.args.indexOf("--model") + 1]).toBe(join(PIPER_VOICE_MODEL_DIR, "en_US-ryan-high.onnx"));
+    expect(ffmpeg.args[ffmpeg.args.indexOf("-af") + 1]).toBe(TTS_RADIO_FILTER);
+  });
+
+  it("a changed pause or filter changes the arguments", () => {
+    const p = buildPiperArgs("m.onnx", "o.wav", 0.7);
+    expect(p[p.indexOf("--sentence_silence") + 1]).toBe("0.7");
+    const f = buildFfmpegArgs("i.wav", "o.mp3", "volume=2");
+    expect(f[f.indexOf("-af") + 1]).toBe("volume=2");
   });
 
   it("removes temp files on success", async () => {

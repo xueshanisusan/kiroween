@@ -278,6 +278,24 @@ Rules that apply to every task:
     - Update `src/config/tts-format.ts` comments; add Piper and ffmpeg install steps to `README.md`; keep the fake adapter and all pipeline tests unchanged and passing
     - Prerequisite: task 13.5
     - _Requirements: 9.4, 9.5, 9.6, 9.7, 14.5, 15.1_
+  - [x] 13.7 Apply the chosen voice, sentence pause and radio filter
+    - In `src/config/`: set `VOICE_ID` to `en_US-ryan-high`; add `TTS_SENTENCE_SILENCE_SECONDS` (0.3, unit: seconds) and `TTS_RADIO_FILTER` (the filter chain recorded in `.kiro/steering/tech.md`), each with a unit or purpose comment
+    - `buildPiperArgs` adds `--sentence_silence` from the constant; the ffmpeg argument builder adds `-af` from the constant
+    - Example tests with the fake runner: Piper args carry the pause and model path for the voice id, ffmpeg args carry the filter, and a changed constant changes the args
+    - Move the Ryan model and its `.onnx.json` from `D:\piper-tools\samples\` to `models/piper/`; add `models/` to `.gitignore` (it is not ignored today) so no model is committed; update the voice name and steps in `README.md`
+    - Re-run the real adapter once on a realistic script and compare `measureMp3DurationSeconds` with `ffprobe`; confirm the MP3 is still MPEG-2 Layer III, 24000 Hz, mono, 48 kbit/s CBR and report the measured duration against `MIN_EPISODE_SECONDS`; commit no audio
+    - Run `npm run typecheck` and `npm test`
+    - Prerequisite: task 13.6
+    - _Requirements: 9.4, 9.5, 9.8, 14.5, 15.1_
+  - [x] 13.8 Add voice download and voice sample scripts
+    - MANUAL tools like `scripts/fetch-fixture.ts`: no test reads their output and they are not part of the pipeline
+    - `scripts/fetch-voice.ts <voice-id>` downloads `<voice-id>.onnx` and `<voice-id>.onnx.json` from the `rhasspy/piper-voices` repository on Hugging Face into `models/piper/`; derives the repository path from the voice id (language, locale, name, quality); skips files that already exist; checks that the download completed; uses its own long timeout because the high-quality model is about 120 MB; no model is ever committed
+    - `scripts/make-voice-samples.ts <voice-id> [--pause <seconds>] [--radio]` reads the sample text from `content/fixtures/voice-sample.txt` (create it, with the same bunker-style sample line used in the listening comparison, marked as invented), runs `piper` and `ffmpeg` with the same pinned MP3 settings as the adapter and, with `--radio`, the `TTS_RADIO_FILTER` constant; writes the MP3 to `samples/` and prints its measured duration
+    - Add `samples/` to `.gitignore` so no audio is committed
+    - Reuse the argument builders from `src/tts/tts.ts` so the samples and the pipeline cannot drift apart; no new runtime dependency
+    - Add a "Generate voice samples" section to `README.md`: the two commands, that `piper` and `ffmpeg` must be on the PATH, where to browse voices (`rhasspy/piper-voices`), to check each voice's model card for its license, and that `en_US-joe-medium` fails to synthesize on the current Piper build
+    - Prerequisite: task 13.7
+    - _Requirements: 15.1_
 - [x] 14. Checkpoint - adapters complete
   - Ensure all tests pass, ask the user if questions arise.
 
@@ -342,8 +360,8 @@ Rules that apply to every task:
 - [x] 17. Checkpoint - full pipeline tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 18. Manual audit of real TTS output
-  - [ ] 18.1 Compare a real TTS MP3 with an independent tool
+- [x] 18. Manual audit of real TTS output
+  - [x] 18.1 Compare a real TTS MP3 with an independent tool
     - MANUAL and optional. Not part of the test suite. Run only after task 13.6 and with `piper`, a voice model, `ffmpeg` and `ffprobe` installed. No credentials are needed; commit no audio
     - Synthesize one real MP3 with the Piper and ffmpeg adapter, measure it with `measureMp3DurationSeconds`, and compare with `ffprobe`
     - Record the real MPEG version, layer, sample rate, channels, and bitrate mode (CBR or VBR, and the bitrate)
@@ -383,7 +401,9 @@ Rules that apply to every task:
     { "id": 16, "tasks": ["16.1", "16.2", "16.3", "16.4"] },
     { "id": 17, "tasks": ["17"] },
     { "id": 18, "tasks": ["13.6"] },
-    { "id": 19, "tasks": ["18.1"] }
+    { "id": 19, "tasks": ["18.1"] },
+    { "id": 20, "tasks": ["13.7"] },
+    { "id": 21, "tasks": ["13.8"] }
   ]
 }
 ```

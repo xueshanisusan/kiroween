@@ -315,6 +315,9 @@ The adapter SHALL set all of these on every ffmpeg call. It must not rely on ffm
 - `-ar String(ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz)`, which is `24000`. Piper voices differ in native rate (commonly 22050 Hz), so ffmpeg resamples.
 - `-ac String(ASSUMED_TTS_AUDIO_FORMAT.channels)`, which is `1`.
 - `-c:a libmp3lame` and `-b:a <fakeBitrateKbps>k`, which is `48k`, constant bitrate.
+- `-af <TTS_RADIO_FILTER>`, the radio-style filter chain from `src/config/` (band-pass, compressor, light echo, volume). It changes the sound, not the MP3 format, so the constants above still hold.
+
+Piper itself is called with `--sentence_silence <TTS_SENTENCE_SILENCE_SECONDS>` (unit: seconds, value 0.3) and the voice model for `VOICE_ID` (`en_US-ryan-high`). The extra silence and the filter's echo make the audio slightly longer than the word count alone suggests, so the measured duration is still checked against `MIN_EPISODE_SECONDS`.
 
 Reason: the format is now chosen by us, not by a vendor, so the constant and the encoder have one source. An MP3 at 24000 Hz is MPEG-2 Layer III, which matches the constant. If the constant and the command ever diverge, someone changed the constant.
 
@@ -328,8 +331,7 @@ export const ASSUMED_TTS_AUDIO_FORMAT = {
   layer: 3,                       // MPEG audio layer; 3 = Layer III
   sampleRateHz: 24000,            // output sample rate in Hz (ffmpeg -ar)
   channels: 1,                    // 1 = mono (ffmpeg -ac); frame header channel mode "single channel"
-  bitrateMode:
-    "unverified; the parser handles CBR and VBR per frame", // replace with the real result of audit task 18.1
+  bitrateMode: "CBR", // verified by audit 18.1: ffprobe reports 48000 bit/s and ffmpeg writes an Info (CBR) header frame
   fakeBitrateKbps: 48,            // CBR bitrate in kbit/s (ffmpeg -b:a) and the bitrate of the test fake
 } as const;
 ```

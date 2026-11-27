@@ -713,6 +713,16 @@
         "executionId": "23308317-b45b-4659-ba8c-4d6985a50a45",
         "chatSessionId": "sess_e9a286d8-ef24-4134-b65d-b6264ff3d941",
         "timestamp": 1795644414754
+      },
+      {
+        "executionId": "bc72f2b6-5761-4548-badd-938904630a03",
+        "chatSessionId": "sess_e6364311-7622-4e77-ab76-26064e1afbea",
+        "timestamp": 1795810203413
+      },
+      {
+        "executionId": "bc72f2b6-5761-4548-badd-938904630a03",
+        "chatSessionId": "sess_e6364311-7622-4e77-ab76-26064e1afbea",
+        "timestamp": 1795810341421
       }
     ],
     "10. MP3 duration measurement": [
@@ -767,6 +777,37 @@
         "executionId": "13dc4a8b-237f-4d87-8d75-e4484bce9e38",
         "chatSessionId": "sess_e6364311-7622-4e77-ab76-26064e1afbea",
         "timestamp": 1795809860013
+      }
+    ],
+    "18. Manual audit of real TTS output": [
+      {
+        "executionId": "bc72f2b6-5761-4548-badd-938904630a03",
+        "chatSessionId": "sess_e6364311-7622-4e77-ab76-26064e1afbea",
+        "timestamp": 1795810341541
+      }
+    ],
+    "13.7 Apply the chosen voice, sentence pause and radio filter": [
+      {
+        "executionId": "c5e5b4e6-89b3-41fa-84df-77ebdd22db92",
+        "chatSessionId": "sess_ead75475-9ec6-41bb-a7f7-695ae6972b18",
+        "timestamp": 1795819446994
+      },
+      {
+        "executionId": "c5e5b4e6-89b3-41fa-84df-77ebdd22db92",
+        "chatSessionId": "sess_ead75475-9ec6-41bb-a7f7-695ae6972b18",
+        "timestamp": 1795820078822
+      }
+    ],
+    "13.8 Add voice download and voice sample scripts": [
+      {
+        "executionId": "36c25a98-d1a0-4127-a800-578264b33636",
+        "chatSessionId": "sess_ead75475-9ec6-41bb-a7f7-695ae6972b18",
+        "timestamp": 1795820107309
+      },
+      {
+        "executionId": "36c25a98-d1a0-4127-a800-578264b33636",
+        "chatSessionId": "sess_ead75475-9ec6-41bb-a7f7-695ae6972b18",
+        "timestamp": 1795820161958
       }
     ]
   }

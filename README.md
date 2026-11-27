@@ -14,6 +14,33 @@
 8. implement
 9. iterate using *Sync Files*
 
+## Text-to-speech prerequisites (local)
+
+The build speaks the script with local [Piper](https://github.com/rhasspy/piper) and encodes it with [ffmpeg](https://ffmpeg.org/).
+
+1. Install ffmpeg and make sure `ffmpeg` is on your `PATH` (`ffmpeg -version` should work).
+2. Install Piper and make sure `piper` is on your `PATH` (`piper --help` should work).
+3. Download the voice model and its `.json` config into `models/piper/`. The default voice is `en_US-ryan-high` (files `en_US-ryan-high.onnx` and `en_US-ryan-high.onnx.json`, from [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices)).
+4. To use other binary paths or another voice, edit `PIPER_BINARY`, `FFMPEG_BINARY`, `PIPER_VOICE_MODEL_DIR`, `VOICE_ID`, `TTS_SENTENCE_SILENCE_SECONDS` (0.3 s pause between sentences) and `TTS_RADIO_FILTER` (ffmpeg radio-style filter) in `src/config/index.ts`.
+
+Still to do: listen to a built episode over a phone speaker outdoors to confirm the voice is intelligible.
+
+## Generate voice samples
+
+Manual tools for choosing a voice. They are not part of the pipeline, and `models/` and `samples/` are git-ignored.
+
+```
+npx tsx scripts/fetch-voice.ts en_US-ryan-high
+npx tsx scripts/make-voice-samples.ts en_US-ryan-high --pause 0.3 --radio
+```
+
+- `piper` and `ffmpeg` must be on your `PATH`.
+- The first command downloads the voice into `models/piper/` and skips files that already exist. The second speaks `content/fixtures/voice-sample.txt` (invented text) and writes an MP3 to `samples/`, then prints its duration. `--radio` applies the radio filter; `--pause` sets the sentence pause in seconds.
+- Browse voices at [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices). Check each voice's model card for its license before using it.
+- `en_US-joe-medium` fails to synthesize on the current Piper build.
+
+---
+
 ## How To Use KIRO
 
 This section is for my fellow teammates.
@@ -56,20 +83,6 @@ Then use the Review button on the file to leave inline comments to the specific 
 ### 4. Known gaps
 
 Kiro cannot automatically read the steering files. I wrote an `AGENTS.md` to include the steering files so Kiro has higher possibility to read the files -- but it's not always working. So when you start a new session, while Kiro generates its thinking and responses, keep an eye out on "did Kiro read the steering files?".
-
-## Text-to-speech prerequisites (local, no account)
-
-The build speaks the script with local [Piper](https://github.com/rhasspy/piper) and encodes it with [ffmpeg](https://ffmpeg.org/). Both are system programs, not npm packages. Tests use a fake process runner and do not need either one.
-
-1. Install ffmpeg and make sure `ffmpeg` is on your `PATH` (`ffmpeg -version` should work).
-   - Windows: `winget install Gyan.FFmpeg`
-   - macOS: `brew install ffmpeg`
-   - Debian/Ubuntu: `sudo apt install ffmpeg`
-2. Install Piper and make sure `piper` is on your `PATH` (`piper --help` should work). Download a release binary from the Piper releases page, or `pip install piper-tts`.
-3. Download the voice model and its `.json` config into `models/piper/`. The default voice is `en_US-lessac-medium` (files `en_US-lessac-medium.onnx` and `en_US-lessac-medium.onnx.json`, from the `rhasspy/piper-voices` repository on Hugging Face).
-4. To use other binary paths or another voice, edit `PIPER_BINARY`, `FFMPEG_BINARY`, `PIPER_VOICE_MODEL_DIR` and `VOICE_ID` in `src/config/index.ts`.
-
-Still to do: listen to a built episode over a phone speaker outdoors to confirm the voice is intelligible.
 
 ## Keep In Mind!
 

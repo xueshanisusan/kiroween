@@ -8,7 +8,14 @@ export const FEED_URLS = ["https://news.mit.edu/rss/feed"] as const;
 export const CAMPUS_TIMEZONE = "America/New_York";
 
 /** TTS voice id: the Piper voice name, also the model file's base name (text). */
-export const VOICE_ID = "en_US-lessac-medium";
+export const VOICE_ID = "en_US-ryan-high";
+
+/** Pause Piper inserts after each sentence (seconds). Piper default is 0.2; 0.7 sounded too slow. */
+export const TTS_SENTENCE_SILENCE_SECONDS = 0.3;
+
+/** ffmpeg audio filter chain (-af) giving the radio-style sound for phone speakers (ffmpeg filtergraph text). */
+export const TTS_RADIO_FILTER =
+  "highpass=f=300,lowpass=f=3400,acompressor=threshold=-18dB:ratio=4,aecho=0.8:0.5:45:0.25,volume=1.3";
 
 /** Piper executable, looked up on PATH (command name or absolute path). */
 export const PIPER_BINARY = "piper";
@@ -69,3 +76,9 @@ export const BUILD_LOCK_GRACE_SECONDS = 60;
 
 /** Interval between cron invocations (seconds). */
 export const CRON_INTERVAL_SECONDS = 1200;
+
+/** Timeout for one voice model download by scripts/fetch-voice.ts (milliseconds). The high-quality model is about 120 MB. */
+export const VOICE_DOWNLOAD_TIMEOUT_MS = 30 * 60 * 1000;
+
+/** Hugging Face base URL of the Piper voices repository (URL, no trailing slash). */
+export const PIPER_VOICES_BASE_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/main";

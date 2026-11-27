@@ -9,6 +9,6 @@ export const ASSUMED_TTS_AUDIO_FORMAT = {
   layer: 3, // MPEG audio layer; 3 = Layer III
   sampleRateHz: 24000, // output sample rate in Hz (ffmpeg -ar)
   channels: 1, // 1 = mono (ffmpeg -ac); frame header channel mode "single channel"
-  bitrateMode: "unverified; the parser handles CBR and VBR per frame", // real mode of the output NOT verified
+  bitrateMode: "CBR", // verified by audit 18.1: ffprobe reports 48000 bit/s and ffmpeg writes an Info (CBR) header frame
   fakeBitrateKbps: 48, // CBR bitrate in kbit/s (ffmpeg -b:a) and the bitrate of the test fake
 } as const;
