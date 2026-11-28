@@ -1,0 +1,517 @@
+{
+  "pbtResults": {
+    "3.2 Write property test for ANSI/carriage-return removal (Property 1)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795840399777
+    },
+    "3.3 Write property test for idempotence (Property 2)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795840429861
+    },
+    "3.5 Write property test for metamorphic noise stability (Property 4)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795840532710
+    },
+    "3.6 Write property test for all-removable collapse (Property 5)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795840572132
+    },
+    "7.2 Write property test for the selector's total case-split (Property 6)": {
+      "status": "passed",
+      "lastRunTimestamp": 1795840833947
+    }
+  },
+  "executionHistory": {
+    "1.1 Add optional stdout capture to `src/tts/tts.ts`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838920187
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838926093
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795839023588
+      }
+    ],
+    "1.2 Write unit tests for the stdout capture extension": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838920333
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795839025407
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840338202
+      }
+    ],
+    "2.1 Add named constants to `src/config/index.ts`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838920445
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795839025890
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840338559
+      }
+    ],
+    "2.2 Write a config example test for the new constants": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838920548
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840340279
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840405628
+      }
+    ],
+    "3.1 Implement `src/summarize/clean-kiro-cli-output.ts`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838920664
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795839026430
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840338451
+      }
+    ],
+    "3.2 Write property test for ANSI/carriage-return removal (Property 1)": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838920773
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840340795
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840405184
+      }
+    ],
+    "3.3 Write property test for idempotence (Property 2)": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838920869
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840408607
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840439991
+      }
+    ],
+    "3.4 Write property test for the identity case (Property 3)": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838920978
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840441818
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840494773
+      }
+    ],
+    "3.5 Write property test for metamorphic noise stability (Property 4)": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838921087
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840496799
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840539539
+      }
+    ],
+    "3.6 Write property test for all-removable collapse (Property 5)": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838921186
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840541030
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840577473
+      }
+    ],
+    "4. Checkpoint - Output_Cleaner complete": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838921283
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840579188
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840596772
+      }
+    ],
+    "5.1 Extend `LlmError` in `src/summarize/llm.ts`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838921381
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840598312
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840626995
+      }
+    ],
+    "5.2 Implement `src/summarize/kiro-cli-adapter.ts`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838921899
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840628575
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840689014
+      }
+    ],
+    "5.3 Write unit tests for the Kiro CLI adapter": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922008
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840690506
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840739659
+      }
+    ],
+    "6. Checkpoint - Kiro CLI adapter complete": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922116
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840741306
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840758275
+      }
+    ],
+    "7.1 Implement `src/summarize/select-llm.ts`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922205
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840759838
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840794556
+      }
+    ],
+    "7.2 Write property test for the selector's total case-split (Property 6)": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922304
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840796398
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840840250
+      }
+    ],
+    "7.3 Write unit tests for the selector": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922398
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840796915
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840840790
+      }
+    ],
+    "8.1 Update `scripts/build-briefing.ts`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922506
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840842527
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840870187
+      }
+    ],
+    "8.2 Write a test for the build script's LLM mode wiring": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922617
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840872977
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840957160
+      }
+    ],
+    "9. Checkpoint - Selector and build script wired": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922722
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840958803
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840976690
+      }
+    ],
+    "10.1 Extend the import-boundary test": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922819
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840979024
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795841010748
+      }
+    ],
+    "10.2 Update `README.md`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838922920
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840979982
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795841012459
+      }
+    ],
+    "10.3 Update `.env.example`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838923037
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840980346
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795841012576
+      }
+    ],
+    "10.4 Update `.kiro/steering/tech.md`": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838923149
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840980758
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795841012716
+      }
+    ],
+    "11. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795838923255
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795841014404
+      },
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795841031609
+      }
+    ],
+    "1. Extend the shared process runner to capture stdout": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840338320
+      }
+    ],
+    "2. Config constants for the Kiro CLI adapter": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840405747
+      }
+    ],
+    "3. Output_Cleaner": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840577648
+      }
+    ],
+    "5. Extend LlmError and implement the Kiro CLI adapter": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840739780
+      }
+    ],
+    "7. Llm_Selector": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840840891
+      }
+    ],
+    "8. Wire the build script to the selector": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795840957273
+      }
+    ],
+    "10. Boundary test and documentation": [
+      {
+        "executionId": "21abff2b-bd52-42e9-8627-a0b6f7175ca2",
+        "chatSessionId": "sess_38608fdf-2145-42ab-8b3a-8f9e594216a6",
+        "timestamp": 1795841012813
+      }
+    ]
+  }
+}

@@ -49,6 +49,21 @@ Notes:
 - Cost: OpenRouter bills per call, about $0.15 per minute of audio. A 60 to 120 s Episode costs roughly $0.15 to $0.30 (one build, one call).
 - Still to do: the Seed speaker id has not been chosen. Pick it by listening test with the manual sample script `scripts/synthesize-seed-sample.ts` (task 19.5), then set `SEED_TTS_VOICE`. Also confirm the Seed voice is intelligible over a phone speaker outdoors.
 
+## LLM mode (`LLM_MODE`)
+
+The summarizer calls an LLM through `summarize/summarize.ts`. `LLM_MODE` (read in `src/config/index.ts`) selects how:
+
+- `http` (default when `LLM_MODE` is unset): the existing HTTP LLM call through `src/lib/http.ts`.
+- `kiro-cli`: runs the Kiro CLI as a subprocess instead of the HTTP call.
+
+Using `kiro-cli`:
+
+- Kiro CLI must be installed and on your `PATH`, and you must be logged in (`kiro-cli login`).
+- It spends Kiro credits.
+- It runs only in the batch job `scripts/build-briefing.ts`. The web player and phone line make no LLM call at request time.
+
+Example: `LLM_MODE=kiro-cli npm run build-briefing`.
+
 ## Generate voice samples
 
 Manual tools for choosing a voice. They are not part of the pipeline, and `models/` and `samples/` are git-ignored.

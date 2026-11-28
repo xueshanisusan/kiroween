@@ -143,3 +143,30 @@ export const WEB_DEFAULT_PORT = 8787;
 
 /** Default web server bind host (IPv4 address), overridden by HOST. */
 export const WEB_DEFAULT_HOST = "0.0.0.0";
+
+/** Selected summarizer LLM mode: 'http' (default; the HTTP LLM adapter) or 'kiro-cli' (runs the kiro-cli executable as a subprocess). Read from LLM_MODE; unset means http. Left as text so an unknown value is reported by selectLlmAdapter. */
+export const LLM_MODE: string = process.env.LLM_MODE ?? "http";
+
+/** kiro-cli executable, looked up on PATH (command name or absolute path). */
+export const KIRO_CLI_BINARY = "kiro-cli";
+
+/** Timeout for one Kiro CLI run (milliseconds). */
+export const KIRO_CLI_TIMEOUT_MS = 120_000;
+
+/** Max captured stdout for one Kiro CLI run, before cleaning (bytes). */
+export const KIRO_CLI_STDOUT_LIMIT_BYTES = 200_000;
+
+/** Length of the stderr excerpt included in a Kiro CLI error message (characters). */
+export const KIRO_CLI_STDERR_EXCERPT_CHARS = 300;
+
+/**
+ * Lower-case substrings matched case-insensitively against Kiro CLI stderr to detect "not logged in" (text).
+ * UNVERIFIED: the real stderr text was not confirmed against an unauthenticated kiro-cli run (see design.md,
+ * "Open items"). A non-zero exit matching none of these is reported as non-zero-exit instead.
+ */
+export const KIRO_CLI_NOT_LOGGED_IN_HINTS: readonly string[] = [
+  "not logged in",
+  "not authenticated",
+  "please log in",
+  "login",
+];

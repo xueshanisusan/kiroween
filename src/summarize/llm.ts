@@ -5,7 +5,12 @@ export type LlmError =
   | { kind: "not-configured"; message: string }
   | { kind: "request-failed"; message: string }
   | { kind: "bad-response"; message: string }
-  | { kind: "aborted"; message: string };
+  | { kind: "aborted"; message: string }
+  | { kind: "binary-not-found"; message: string }
+  | { kind: "not-logged-in"; message: string }
+  | { kind: "non-zero-exit"; exitCode: number; message: string }
+  | { kind: "timeout"; message: string }
+  | { kind: "empty-output"; message: string };
 
 export type LlmRequest = { prompt: string; signal: AbortSignal };
 

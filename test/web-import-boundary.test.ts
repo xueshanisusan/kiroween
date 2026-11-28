@@ -102,6 +102,28 @@ describe('web import boundary', () => {
     expect(violations).toEqual([]);
   });
 
+  it('src/web/ never imports the Kiro CLI adapter or the LLM mode selector (Requirements 8.1, 8.2)', () => {
+    const banned = [join(SRC, 'summarize', 'kiro-cli-adapter'), join(SRC, 'summarize', 'select-llm')];
+    const violations: string[] = [];
+    for (const file of webFiles) {
+      for (const ref of extractImports(file)) {
+        const target = resolveTarget(ref);
+        if (target !== null && banned.includes(target)) {
+          violations.push(`${rel(file)} -> ${ref.specifier}`);
+        }
+      }
+    }
+    expect(violations).toEqual([]);
+    // Scanner sanity: both specifier spellings resolve to the banned targets.
+    const sample = join(WEB_DIR, '__sample__.ts');
+    for (const [spec, expected] of [
+      ['../summarize/kiro-cli-adapter.js', banned[0]],
+      ['../summarize/select-llm', banned[1]],
+    ] as const) {
+      expect(resolveTarget({ file: sample, specifier: spec, clause: '', dynamic: false })).toBe(expected);
+    }
+  });
+
   it('src/web/ imports from src/publish/ only episode-json and the two file-name constants', () => {
     const violations: string[] = [];
     for (const file of webFiles) {

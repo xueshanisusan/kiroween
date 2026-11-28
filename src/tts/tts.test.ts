@@ -227,6 +227,64 @@ describe("spawn runner", () => {
     c2.emit("error", new Error("ENOENT"));
     expect(await p2).toEqual({ kind: "spawn-failed", message: "ENOENT" });
   });
+
+  type StdoutChild = ReturnType<typeof fakeChild> & { emitStdout: (s: Buffer | string) => void };
+  function fakeChildWithStdout(): StdoutChild {
+    const child = fakeChild() as StdoutChild;
+    let cb: ((chunk: Buffer | string) => void) | undefined;
+    child.stdout = {
+      on: (_e, f) => {
+        cb = f;
+      },
+    };
+    child.emitStdout = (s) => cb?.(s);
+    return child;
+  }
+
+  it("captureStdout returns the written stdout and requests a piped stdout", async () => {
+    const child = fakeChildWithStdout();
+    const spawnArgs: unknown[][] = [];
+    const p = createSpawnRunner((...a) => {
+      spawnArgs.push(a);
+      return child;
+    }).run({ command: "x", args: ["a"], captureStdout: true }, signal);
+    child.emitStdout("hello ");
+    child.emitStdout(Buffer.from("world"));
+    child.emit("close", 0);
+    expect(await p).toEqual({ kind: "exited", code: 0, stderr: "", stdout: "hello world" });
+    expect(spawnArgs).toEqual([["x", ["a"], true]]);
+  });
+
+  it("captureStdout caps stdout at captureLimitBytes", async () => {
+    const child = fakeChildWithStdout();
+    const p = createSpawnRunner(() => child).run(
+      { command: "x", args: [], captureStdout: true, captureLimitBytes: 8 },
+      signal,
+    );
+    child.emitStdout("12345");
+    child.emitStdout("67890");
+    child.emitStdout("more");
+    child.emit("close", 0);
+    const out = await p;
+    expect(out).toEqual({ kind: "exited", code: 0, stderr: "", stdout: "12345678" });
+  });
+
+  it("captureStdout unset or false adds no stdout field and uses the unchanged spawn call", async () => {
+    for (const spec of [{ command: "x", args: [] }, { command: "x", args: [], captureStdout: false }]) {
+      const child = fakeChildWithStdout();
+      const spawnArgs: unknown[][] = [];
+      const p = createSpawnRunner((...a) => {
+        spawnArgs.push(a);
+        return child;
+      }).run(spec, signal);
+      child.emitStdout("ignored");
+      child.emit("close", 0);
+      const out = await p;
+      expect(out).toEqual({ kind: "exited", code: 0, stderr: "" });
+      expect("stdout" in out).toBe(false);
+      expect(spawnArgs).toEqual([["x", []]]);
+    }
+  });
 });
 
 describe("fake TTS adapter", () => {

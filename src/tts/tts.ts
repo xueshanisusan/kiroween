@@ -50,10 +50,14 @@ export interface ProcessSpec {
   args: readonly string[];
   /** Text written to the child's stdin, then closed. */
   stdin?: string;
+  /** When true, the child's stdout is captured and returned on the exited outcome. */
+  captureStdout?: boolean;
+  /** Cap on captured stdout, in characters. Defaults to the stderr cap (2000). */
+  captureLimitBytes?: number;
 }
 
 export type ProcessOutcome =
-  | { kind: "exited"; code: number; stderr: string }
+  | { kind: "exited"; code: number; stderr: string; stdout?: string }
   | { kind: "spawn-failed"; message: string }
   | { kind: "aborted" };
 
@@ -65,16 +69,20 @@ export interface ProcessRunner {
 /** Subset of ChildProcess the runner uses, so tests can supply a fake. */
 export interface SpawnedChild {
   stdin: { write(data: string): unknown; end(): unknown; on(event: "error", cb: () => void): unknown } | null;
+  stdout?: { on(event: "data", cb: (chunk: Buffer | string) => void): unknown } | null;
   stderr: { on(event: "data", cb: (chunk: Buffer | string) => void): unknown } | null;
   on(event: "error", cb: (err: Error) => void): unknown;
   on(event: "close", cb: (code: number | null) => void): unknown;
   kill(signal?: NodeJS.Signals): unknown;
 }
 
-export type SpawnFn = (command: string, args: readonly string[]) => SpawnedChild;
+export type SpawnFn = (command: string, args: readonly string[], captureStdout?: boolean) => SpawnedChild;
 
-const defaultSpawn: SpawnFn = (command, args) =>
-  spawn(command, [...args], { shell: false, stdio: ["pipe", "ignore", "pipe"] }) as unknown as SpawnedChild;
+const defaultSpawn: SpawnFn = (command, args, captureStdout) =>
+  spawn(command, [...args], {
+    shell: false,
+    stdio: ["pipe", captureStdout === true ? "pipe" : "ignore", "pipe"],
+  }) as unknown as SpawnedChild;
 
 /** Real runner. The abort signal kills the child process. */
 export function createSpawnRunner(spawnFn: SpawnFn = defaultSpawn): ProcessRunner {
@@ -87,12 +95,14 @@ export function createSpawnRunner(spawnFn: SpawnFn = defaultSpawn): ProcessRunne
         }
         let child: SpawnedChild;
         try {
-          child = spawnFn(spec.command, spec.args);
+          child = spec.captureStdout === true ? spawnFn(spec.command, spec.args, true) : spawnFn(spec.command, spec.args);
         } catch (err) {
           resolve({ kind: "spawn-failed", message: err instanceof Error ? err.message : String(err) });
           return;
         }
         let stderr = "";
+        let stdout = "";
+        const stdoutLimit = spec.captureLimitBytes ?? 2000;
         let settled = false;
         const finish = (outcome: ProcessOutcome): void => {
           if (settled) return;
@@ -108,8 +118,19 @@ export function createSpawnRunner(spawnFn: SpawnFn = defaultSpawn): ProcessRunne
         child.stderr?.on("data", (chunk) => {
           if (stderr.length < 2000) stderr += chunk.toString();
         });
+        if (spec.captureStdout === true) {
+          child.stdout?.on("data", (chunk) => {
+            if (stdout.length < stdoutLimit) stdout = (stdout + chunk.toString()).slice(0, stdoutLimit);
+          });
+        }
         child.on("error", (err) => finish({ kind: "spawn-failed", message: err.message }));
-        child.on("close", (code) => finish({ kind: "exited", code: code ?? -1, stderr }));
+        child.on("close", (code) =>
+          finish(
+            spec.captureStdout === true
+              ? { kind: "exited", code: code ?? -1, stderr, stdout }
+              : { kind: "exited", code: code ?? -1, stderr },
+          ),
+        );
         if (child.stdin) {
           child.stdin.on("error", () => undefined); // a child that exits early closes the pipe
           if (spec.stdin !== undefined) child.stdin.write(spec.stdin);
