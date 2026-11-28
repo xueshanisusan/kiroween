@@ -14,6 +14,7 @@
  */
 import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { BRIEFING_DEFAULT_DATA_DIR } from "../src/config/index.js";
 import { createHttpClient } from "../src/lib/http.js";
 import { createLogger } from "../src/lib/log.js";
 import { runPipeline } from "../src/pipeline/run.js";
@@ -22,7 +23,7 @@ import { selectTtsAdapter } from "../src/tts/tts.js";
 
 async function main(): Promise<number> {
   const logger = createLogger();
-  const dir = resolve(process.env.BRIEFING_DATA_DIR ?? "data");
+  const dir = resolve(process.env.BRIEFING_DATA_DIR ?? BRIEFING_DEFAULT_DATA_DIR);
   mkdirSync(dir, { recursive: true });
 
   const tts = selectTtsAdapter();

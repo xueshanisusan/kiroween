@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "TypeScript quality check",
+      "trigger": "PostFileSave",
+      "matcher": "(^|[\\\\/])(src|test|scripts)[\\\\/].*\\.ts$",
+      "action": {
+        "type": "agent",
+        "prompt": "A TypeScript file under src/, test/ or scripts/ was just saved. Before continuing: (1) Run `npm run typecheck`. (2) Run `npx vitest --run <test file>` on the test file for the saved module: the sibling `*.test.ts`, or the equivalent under `test/`. If the saved file is itself a test, run that file. Fix any failure before continuing with other work. (3) Check the saved file against the steering rules: named exports only, no default exports; no `any`; `Result<T, E>` at boundaries, and throw only for programmer error; layers import downward only (ingest -> summarize -> tts -> publish; telephony and web read publish and never the reverse; `src/web/` must not import ingest, summarize, tts, select, ground, length or pipeline); campus values and tunable constants live in `src/config/` as named constants with a comment stating the unit; no new runtime dependency; no network call outside `src/lib/http.ts` (the Seed adapter's SDK call in `src/tts/seed.ts` is the only exception). Fix any violation you find. Never read `.env`; use `.env.example` if you need to know variable names."
+      }
+    }
+  ]
+}

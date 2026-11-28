@@ -63,6 +63,62 @@ npx tsx scripts/make-voice-samples.ts en_US-ryan-high --pause 0.3 --radio
 - Browse voices at [rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices). Check each voice's model card for its license before using it.
 - `en_US-joe-medium` fails to synthesize on the current Piper build.
 
+## Web player
+
+The Web_Service is a small Node server (`node:http` only, no extra dependency) that plays the published briefing in a browser. It only serves what the Pipeline has already published. It never writes the data directory, makes no TTS or LLM call, and needs no credentials.
+
+Start it:
+
+```
+npm install
+npm start
+```
+
+Environment variables (all optional):
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `PORT` | `8787` | TCP port, an integer from 1 to 65535. An invalid value stops startup. |
+| `HOST` | `0.0.0.0` | Address to bind. |
+| `BRIEFING_DATA_DIR` | `./data` | Directory holding the published `episode.mp3` and `episode.json`. |
+
+Routes:
+
+| Route | Returns |
+| --- | --- |
+| `/` | The player page: audio control, episode facts and a text transcript. |
+| `/episode.json` | The published episode metadata. |
+| `/episode.mp3` | The published audio, with HTTP range support. |
+| `/healthz` | `{"status":"ok"}` whenever the service is up, with or without an episode. |
+
+Publishing the episode:
+
+- The one production build is run manually with the Seed voice: set `TTS_ENGINE=seed` and `OPENROUTER_API_KEY` in the shell, then run `npm run build-briefing` (this runs `scripts/build-briefing.ts`).
+- The published `episode.mp3` and `episode.json` in `data/` (or `BRIEFING_DATA_DIR`) must be present on the host that runs `npm start`. If they are missing or invalid, the page shows the empty-state message that no briefing has been published yet.
+- The server reads the files on each request, so a new build is served without a restart.
+
+Public URL for the demo:
+
+- The service binds `0.0.0.0` by default, so it accepts connections from outside the machine.
+- The host must forward the port (default 8787, or the value of `PORT`) to the service, for example through a platform port mapping or a tunnel. Use the resulting public URL as the working app URL.
+
+## Agent hooks
+
+Two Kiro hooks are committed in `.kiro/hooks/`:
+
+| File | Trigger | What it does |
+| --- | --- | --- |
+| `.kiro/hooks/block-sensitive-reads.json` | `PreToolUse` | Runs `scripts/hooks/guard-sensitive-reads.ts` before read-capable tools (file read, grep, file search, directory list, shell). If the call names a sensitive file such as `.env`, `.env.*` (not `.env.example`), keys, certificates or credentials files, the call is blocked and the agent gets a short message with no file content. A shell command that only names such a file (for example `git check-ignore .env`) is blocked too. |
+| `.kiro/hooks/typescript-quality.json` | `PostFileSave` | After a `.ts` file under `src/`, `test/` or `scripts/` is saved, tells the agent to run `npm run typecheck` and the matching test file, fix failures, and check the file against the steering rules (named exports, no `any`, layering, config constants). |
+
+To disable a hook, delete the file or rename it so it no longer ends in `.json` (for example `block-sensitive-reads.json.off`) under `.kiro/hooks/`. Start a new Kiro session for the change to take effect.
+
+The sensitive-read hook lowers the chance that the agent reads secrets. It does not replace keeping secrets out of the repo:
+
+- `.env` stays git-ignored. Only `.env.example` (variable names, no values) is committed.
+- Hooks can be disabled, and other tools (an editor, a terminal, another agent) bypass them.
+- A secret that was ever committed must be rotated. Removing it in a later commit does not remove it from history.
+
 ---
 
 ## How To Use KIRO

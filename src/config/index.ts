@@ -106,3 +106,40 @@ export const VOICE_DOWNLOAD_TIMEOUT_MS = 30 * 60 * 1000;
 
 /** Hugging Face base URL of the Piper voices repository (URL, no trailing slash). */
 export const PIPER_VOICES_BASE_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/main";
+
+/** Default directory for episode files and the build lock (directory path). Overridden by BRIEFING_DATA_DIR; shared by the build script and the web server. */
+export const BRIEFING_DEFAULT_DATA_DIR = "./data";
+
+/** Web player settings (Requirement 9.1). */
+export type WebConfig = {
+  /** Outlet name shown on the page (text). */
+  outletName: string;
+  /** Page title (text). */
+  pageTitle: string;
+  /** Message shown when no briefing is published (text). */
+  emptyStateMessage: string;
+  /** Accessible label of the audio control (text). */
+  audioLabel: string;
+  /** Cache-Control max-age for episode JSON (seconds). */
+  jsonCacheMaxAgeSeconds: number;
+  /** Time allowed to receive request headers (milliseconds). */
+  headerTimeoutMs: number;
+  /** Idle socket timeout (milliseconds). */
+  idleTimeoutMs: number;
+};
+
+export const WEB_CONFIG: WebConfig = {
+  outletName: CAMPUS_NAME,
+  pageTitle: `${CAMPUS_NAME} Briefing`,
+  emptyStateMessage: "No briefing has been published yet. Check back soon.",
+  audioLabel: `Play today's ${CAMPUS_NAME} briefing`,
+  jsonCacheMaxAgeSeconds: 60, // seconds: short, since a new build can publish any time
+  headerTimeoutMs: 10_000, // milliseconds
+  idleTimeoutMs: 30_000, // milliseconds
+};
+
+/** Default web server port (number, 1-65535), overridden by PORT. */
+export const WEB_DEFAULT_PORT = 8787;
+
+/** Default web server bind host (IPv4 address), overridden by HOST. */
+export const WEB_DEFAULT_HOST = "0.0.0.0";

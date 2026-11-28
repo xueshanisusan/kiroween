@@ -9,6 +9,7 @@
   "scripts": {
     "test": "vitest --run",
     "build-briefing": "tsx scripts/build-briefing.ts",
+    "start": "tsx src/web/server.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

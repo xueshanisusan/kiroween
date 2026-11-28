@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Block sensitive file reads",
+      "trigger": "PreToolUse",
+      "description": "Blocks read-capable tool calls (exit code 2) that reference sensitive files such as .env, keys and credentials, so secrets never enter the agent context. A shell command that merely names a sensitive file (for example `git check-ignore .env`) is also blocked; this is accepted.",
+      "matcher": "^(read_file|read_code|grep_search|file_search|list_directory|execute_pwsh|readFile|readCode|grepSearch|fileSearch|listDirectory|executePwsh)$",
+      "action": {
+        "type": "command",
+        "command": "npx tsx scripts/hooks/guard-sensitive-reads.ts",
+        "timeout": 30
+      }
+    }
+  ]
+}
