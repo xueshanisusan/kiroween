@@ -24,12 +24,12 @@ ingest → summarize → tts → publish → (telephony reads publish, never the
 - Put application source in a dedicated directory (for example `src/`) and tests beside it or in `tests/`. Update this file once the layout is decided.
 - Keep `README.md` as the entry point for setup and run instructions.
 - **Layers import downward only.** telephony must not import ingest. Shared shapes live in `src/types.ts`.
-- **Adapters at the edges.** Every network call goes through `src/lib/http.ts` (timeout, one retry, typed error). TTS and telephony are interfaces with exactly one implementation each, so they can be swapped in one file.
+- **Adapters at the edges.** Every network call goes through `src/lib/http.ts` (timeout, one retry, typed error), with one narrow exception: the Seed adapter's `@openrouter/sdk` call in `src/tts/seed.ts`. That adapter must itself provide a timeout (`SEED_TTS_TIMEOUT_MS` in `src/config/`, ms), `HTTP_RETRY_COUNT` retries for 429, 5xx and timeout only, and typed `TtsError` mapping (`unauthorized`, `insufficient-credits`, `rate-limited`, `server-error`, `empty-audio`, `timeout`, `aborted`, `missing-credentials`). The SDK is imported only there; tests inject a fake `SpeechClient`. TTS and telephony are interfaces with one implementation per engine, selected in one place (`TTS_ENGINE` in `src/config/` for TTS), so they can be swapped in one file.
 - **Pure cores.** `summarize/length.ts`, `summarize/select.ts`, `ingest/normalize.ts` are pure: no I/O, no clock, no randomness. This is deliberate — they are the property-based testing targets.
 - **Config over code.** Campus name, feed URLs, voice id, greeting text live in `src/config/`. Adding a campus must not require editing a module.
 - kebab-case filenames, named exports only, one responsibility per file.
 - `Result<T, E>` at boundaries; throw only for programmer error.
-- No `any`, no default exports, and no new runtime dependency without a line in `tech.md` saying why the existing stack can't do it.
+- No `any`, no default exports, and no new runtime dependency without a line in `tech.md` saying why the existing stack can't do it. The only runtime dependency added so far is `@openrouter/sdk`, recorded in `tech.md`.
 - Ingest reads RSS only. Extraction is HTML stripping from the feed's content:encoded — there is no article scraping and no per-site CSS selector.
 
 ## What goes where

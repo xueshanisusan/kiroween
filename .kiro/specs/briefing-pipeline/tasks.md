@@ -296,6 +296,47 @@ Rules that apply to every task:
     - Add a "Generate voice samples" section to `README.md`: the two commands, that `piper` and `ffmpeg` must be on the PATH, where to browse voices (`rhasspy/piper-voices`), to check each voice's model card for its license, and that `en_US-joe-medium` fails to synthesize on the current Piper build
     - Prerequisite: task 13.7
     - _Requirements: 15.1_
+- [~] 19. Seed TTS production engine and cost guards (added after task 13.8; numbered 19 so completed task numbers stay unchanged)
+  - [-] 19.1 Add `TTS_ENGINE` config and engine selection
+    - In `src/config/`: add `TTS_ENGINE` (`'piper' | 'seed'`, default `'piper'`), the per-engine radio filter constant (`piper` equals `TTS_RADIO_FILTER`; `seed` defaults to no filter), `SEED_TTS_MODEL` (default `bytedance-seed/seed-audio-1-0`), `SEED_TTS_VOICE` (Seed speaker id) and `SEED_TTS_TIMEOUT_MS` (unit: milliseconds) as named constants, with model and voice overridable by environment variables, each with a unit or purpose comment. No base URL constant is needed: the SDK default server is `https://openrouter.ai/api/v1`. Do not put the API key anywhere in code
+    - In `src/tts/tts.ts`: add `selectTtsAdapter(engine)` as the only place that chooses an implementation; unknown value gives a typed configuration error and no TTS call; rename the existing Piper factory only if needed, keep its behavior and tests unchanged
+    - Make the shared ffmpeg argument builder take the per-engine filter (omit `-af` when empty); Piper arguments must stay identical
+    - Wire `scripts/build-briefing.ts` to call `selectTtsAdapter`
+    - Example tests: engine selection for `'piper'`, `'seed'`, unset (Piper) and unknown value; Piper ffmpeg arguments unchanged; Seed arguments omit `-af` by default and add it when the constant is set
+    - Prerequisites: tasks 13.7 and 15.4. OPEN QUESTION in `product.md` does not block this task
+    - _Requirements: 16.1, 16.2, 16.3, 16.8, 16.11, 15.1_
+
+  - [ ] 19.2 Implement the Seed adapter and its tests
+    - STOP and ask first only if the Seed speaker id (`SEED_TTS_VOICE`) is still an OPEN QUESTION in `product.md` and no value is provided; do not guess it. Authentication, SDK and model are resolved
+    - Install the SDK: run `npm install --save-exact @openrouter/sdk` (verified: version 1.5.144, Apache-2.0, one dependency `zod`). Confirm `package.json` lists `"@openrouter/sdk": "1.5.144"` with no caret or tilde and that `package-lock.json` is updated. It is the only new runtime dependency (see `tech.md`). Then confirm `npm test` and `npm run typecheck` still pass offline (no network, no key, no change to Piper tests)
+    - `src/tts/seed.ts`: declare the minimal `SpeechClient` interface (`createSpeech(request, options?)` returning `Promise<ReadableStream<Uint8Array>>`) and `createSeedAdapter({ client?, env, ... })`. Import `OpenRouter` from `@openrouter/sdk` only in this file (or one tiny factory file beside it), and construct `new OpenRouter({ apiKey })` only when no client is injected and the key is present, so Piper, `selectTtsAdapter('piper')` and tests never load the SDK
+    - Read `OPENROUTER_API_KEY` from the environment at construction; missing or empty gives `TtsError` kind `missing-credentials` before any client is built or request made. One non-streaming call per build: `createSpeech({ speechRequest: { model, input, voice, responseFormat: 'mp3' } }, { signal, retries: { strategy: 'none' } })`; read the returned `ReadableStream<Uint8Array>` to the end into one `Buffer`; shared ffmpeg step produces the pinned MPEG-2 Layer III, 24000 Hz, mono, 48 kbit/s CBR MP3; one `Buffer` returned; no key in logs or errors
+    - Guarantees normally supplied by `src/lib/http.ts` (the one documented exception to the rule): timeout `SEED_TTS_TIMEOUT_MS` through `AbortSignal.any([buildSignal, AbortSignal.timeout(ms)])` passed as `signal` (the SDK supports `signal` in its request options, and a supplied signal takes precedence over its `timeoutMs`); up to `HTTP_RETRY_COUNT` retries only for 429, 5xx (including 502) and timeout, never for 400, 401, 402, 403 or 404; SDK retry disabled with `retries: { strategy: 'none' }`
+    - Map thrown values structurally, with no SDK class imports: read `statusCode` (number) and `name` (string). 401 `unauthorized`, 402 `insufficient-credits`, 429 `rate-limited`, 5xx `server-error`, other statuses `http-status`, `RequestTimeoutError` `timeout`, `RequestAbortedError` `aborted`, `ConnectionError` `server-error`, zero bytes `empty-audio`, failed ffmpeg `encode-failed`, plus `missing-credentials`. Record the status code only, never the response body
+    - `X-Generation-Id`: the SDK returns only the byte stream on success, so no header is available in 1.5.144; log nothing extra and keep a code comment saying so. Do not read headers from error objects
+    - Example tests with a fake `SpeechClient` only (the real SDK is never imported or called; the network-disabling harness stays on): the request object passed to `createSpeech` (`model`, `input`, `voice`, `responseFormat` `'mp3'`), multi-chunk stream collection into one buffer, each error kind including 402 insufficient credits, retries only for 429, 5xx and timeout and never for 400/401/402/403/404 (counting fake calls, at most `HTTP_RETRY_COUNT` further), timeout with a never-resolving fake and a small `SEED_TTS_TIMEOUT_MS`, build abort gives `aborted`, missing key makes no `createSpeech` call, no key in logs, ffmpeg arguments carry the pinned constants, engine selection. No real network call
+    - Prerequisites: tasks 13.1, 13.7 and 19.1
+    - _Requirements: 16.4, 16.5, 16.6, 16.7, 16.9, 16.10, 16.11, 16.12, 16.14, 16.15, 16.16, 13.3, 9.4, 9.6_
+  - [ ] 19.3 Write cost-guard and request-time-no-TTS tests
+    - `test/helpers/throwing-adapters.ts`: a `TtsAdapter` and an `LlmAdapter` that throw if called, plus a counting fake `TtsAdapter` that wraps the default fake MP3
+    - Pipeline-level example tests with the counting fake: equal Selected_Set gives zero TTS calls; empty selection, zero Survivors, script under 150 words and script over the Length_Budget each give zero TTS calls and leave the previous Episode byte-identical; a normal build gives exactly one call; a failed first call gives at most `HTTP_RETRY_COUNT` further calls
+    - Request-time test: build every Request_Handler that exists in `src/` with the throwing adapters and check that each still serves the published Episode (MP3 and Episode_JSON read from a temp directory). If no handler exists yet, the test asserts the helper throws when called and a code comment names the web-player and telephony specs as the place to add their handlers
+    - Prerequisites: tasks 15.4 and 19.1
+    - _Requirements: 17.2, 17.3, 17.4, 17.5, 17.6, 17.7, 17.8, 11.3_
+
+  - [ ] 19.4 Update `README.md` and add `.env.example`
+    - `.env.example` lists, with empty values and a comment each: `TTS_ENGINE`, `OPENROUTER_API_KEY` (placeholder only, never a real key), `SEED_TTS_MODEL`, `SEED_TTS_VOICE`; confirm `.env` is gitignored and `.env.example` is not
+    - README: new "Production voice (Seed TTS)" section: engines and the `TTS_ENGINE` default, the variable names, that tests and local runs never need credentials, that TTS spend happens only in `scripts/build-briefing.ts`, the cron schedule, and the manual sample script (task 19.5). Keep the existing Piper section; mark that the Seed speaker id remains to be chosen by listening test; note that OpenRouter bills per call, about $0.15 per minute of audio, so roughly $0.15 to $0.30 per 60 to 120 s Episode (one build, one call); mention that Seed uses the `@openrouter/sdk` package
+    - Prerequisite: task 19.2
+    - _Requirements: 16.9, 16.13_
+
+  - [ ] 19.5 Add the manual script `scripts/synthesize-seed-sample.ts`
+    - MANUAL tool like `scripts/make-voice-samples.ts`: not part of the test suite and not run by `npm test`; needs a real `OPENROUTER_API_KEY` in the environment and bills per call; accepts a voice override so candidate speaker ids can be compared
+    - Reads `content/fixtures/voice-sample.txt`, builds the Seed adapter, synthesizes once, writes the MP3 to `samples/` (already gitignored), prints the measured duration with `measureMp3DurationSeconds`; exits with a clear message if the key is missing; prints no key; prints no generation id (the SDK exposes none)
+    - Reuse the adapter and constants; no new dependency beyond `@openrouter/sdk` from task 19.2
+    - Prerequisite: task 19.2
+    - _Requirements: 16.9, 16.10, 16.15, 16.16_
+
 - [x] 14. Checkpoint - adapters complete
   - Ensure all tests pass, ask the user if questions arise.
 
@@ -403,7 +444,10 @@ Rules that apply to every task:
     { "id": 18, "tasks": ["13.6"] },
     { "id": 19, "tasks": ["18.1"] },
     { "id": 20, "tasks": ["13.7"] },
-    { "id": 21, "tasks": ["13.8"] }
+    { "id": 21, "tasks": ["13.8"] },
+    { "id": 22, "tasks": ["19.1"] },
+    { "id": 23, "tasks": ["19.2"] },
+    { "id": 24, "tasks": ["19.3", "19.4", "19.5"] }
   ]
 }
 ```

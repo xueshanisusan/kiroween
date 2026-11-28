@@ -295,9 +295,11 @@ interface TtsAdapter {
 }
 ```
 
-One implementation in v1: local Piper plus ffmpeg, per `tech.md`. The interface keeps the voice engine swappable (9.7). One non-streaming call returns one complete MP3 buffer (9.4).
+Two implementations, one per engine, per `tech.md`: `createPiperAdapter` (local Piper plus ffmpeg; tests and local default) and `createSeedAdapter` (Seed Audio 1.0 via OpenRouter plus the same ffmpeg step; production demo). A single function `selectTtsAdapter(engine)` in `src/tts/tts.ts` reads `TTS_ENGINE` from `src/config/` and is the only place that chooses an implementation (16.1, 16.2). The default is `'piper'`, so a clean checkout needs no credentials. An unknown value gives a typed configuration error and no TTS call (16.3). The interface keeps the voice engine swappable (9.7). One non-streaming call returns one complete MP3 buffer (9.4, 16.4).
 
-**Why local.** Polly and ElevenLabs cost money. Piper runs offline on the build host with no account or credentials, so the repo runs from a clean checkout. `piper` and `ffmpeg` are system binaries that the adapter starts with `child_process`. They are not npm packages, so the runtime dependency list does not change.
+**Why Piper is the default.** Polly and ElevenLabs cost money and stay rejected. Piper runs offline on the build host with no account or credentials, so the repo and the test suite run from a clean checkout. `piper` and `ffmpeg` are system binaries that the adapter starts with `child_process`. They are not npm packages, so the runtime dependency list does not change.
+
+**Why Seed for production.** The team chose ByteDance Seed Audio 1.0 (`bytedance-seed/seed-audio-1-0`, non-streaming) for the demo voice quality, reached through OpenRouter with a team-provided API key and the vendor's TypeScript SDK `@openrouter/sdk`. A paid, credentialed service is therefore allowed for production only; `tech.md` records the reason and the one new runtime dependency. OpenRouter bills about $0.15 per minute of audio, so a 60 to 120 s Episode costs roughly $0.15 to $0.30 per build. That is why TTS stays batch-only (Requirement 17).
 
 **How the adapter works (one call, no streaming).**
 
@@ -321,6 +323,44 @@ Piper itself is called with `--sentence_silence <TTS_SENTENCE_SILENCE_SECONDS>` 
 
 Reason: the format is now chosen by us, not by a vendor, so the constant and the encoder have one source. An MP3 at 24000 Hz is MPEG-2 Layer III, which matches the constant. If the constant and the command ever diverge, someone changed the constant.
 
+The `-af` value comes from a per-engine constant (16.8): `TTS_RADIO_FILTER_BY_ENGINE.piper` equals `TTS_RADIO_FILTER`; `TTS_RADIO_FILTER_BY_ENGINE.seed` defaults to no filter (the `-af` argument is omitted), because the point of Seed is voice quality and the radio chain was tuned for Piper. The listening test decides whether Seed gets a filter; changing it is a config edit only. The sample rate, channels, codec and bitrate arguments are identical for both engines.
+
+#### Seed adapter (`createSeedAdapter`, `src/tts/seed.ts`)
+
+The adapter calls the OpenRouter TypeScript SDK, `@openrouter/sdk`. Facts checked against the published package (version 1.5.144, Apache-2.0, one dependency: `zod`, no peer dependencies; installed in a scratch folder, not in the repo): `new OpenRouter({ apiKey })` exposes `tts.createSpeech(request, options?)`, which returns `Promise<ReadableStream<Uint8Array>>`. `request` is `{ speechRequest: { model, input, voice?, responseFormat?, speed?, provider? } }`. `options` is the SDK `RequestOptions`: `timeoutMs`, `retries`, `retryCodes` and every `RequestInit` field except `method` and `body`, so `signal` is supported. The version is pinned exactly in `package.json` (no caret) by `npm install --save-exact @openrouter/sdk`.
+
+**SDK isolation.** The adapter file declares a minimal interface and depends only on it:
+
+```ts
+// src/tts/seed.ts
+interface SpeechClient {
+  createSpeech(
+    request: { speechRequest: { model: string; input: string; voice?: string; responseFormat: "mp3" } },
+    options?: { signal?: AbortSignal; retries?: { strategy: "none" } },
+  ): Promise<ReadableStream<Uint8Array>>;
+}
+function createSeedAdapter(deps: { client?: SpeechClient; env: NodeJS.ProcessEnv; /* runner, logger, config */ }): TtsAdapter;
+```
+
+The real `OpenRouter` class (its `tts` property satisfies `SpeechClient`) is imported only in `src/tts/seed.ts` or in one tiny factory file beside it, and is constructed only when no `client` is injected and the key is present. `selectTtsAdapter('piper')`, the Piper adapter and every test other than the one factory smoke check never load the SDK module. Tests inject a fake `SpeechClient`; they never import or call the real SDK, so the network-disabling harness stays on.
+
+Request flow, one synthesis per build (16.4):
+
+1. Read `OPENROUTER_API_KEY` from the environment at adapter construction. If it is missing or empty, return `TtsError { kind: "missing-credentials" }` before any client is built or request made (16.10). The variable name is documented in `README.md` and `.env.example` as a placeholder only (16.13). The key goes only into the SDK constructor and never into code, logs, errors or committed files (16.9).
+2. Call `client.createSpeech({ speechRequest: { model, input: script, voice, responseFormat: "mp3" } }, { signal, retries: { strategy: "none" } })` (16.4, 16.6). `model` is `SEED_TTS_MODEL` (default `bytedance-seed/seed-audio-1-0`) and `voice` is `SEED_TTS_VOICE`; both are named constants in `src/config/`, overridable by environment variables (16.11). `speed`, `provider` and `output_delivery` are not used.
+3. Read the returned `ReadableStream<Uint8Array>` to the end and concatenate the chunks into one `Buffer`. This is collection of one non-streaming response, not audio streaming: the pipeline sees one `Buffer`, never a stream. Zero bytes gives `empty-audio`.
+4. Write the bytes to a temp file, run the shared ffmpeg step (`-ar`, `-ac`, `-c:a libmp3lame`, `-b:a`, optional `-af`), read the result into one `Buffer`, delete the temp files and return it (16.7).
+
+**Exception to the `http.ts` rule.** The SDK call is the one network call that does not go through `src/lib/http.ts`; `structure.md` and `AGENTS.md` record this narrow exception. The adapter itself supplies the three guarantees `http.ts` gives (16.5):
+
+- **Timeout.** `SEED_TTS_TIMEOUT_MS` (`src/config/`, unit: milliseconds). The adapter passes one `signal` made with `AbortSignal.any([buildSignal, AbortSignal.timeout(SEED_TTS_TIMEOUT_MS)])` and does not pass `timeoutMs`, because the SDK documents that a supplied signal takes precedence over `timeoutMs`. Because the signal is on the `fetch` call, it also covers reading the body stream. When the signal fires, the adapter decides by checking `buildSignal.aborted`: aborted gives `aborted`, otherwise `timeout`. If a future SDK version stops honoring `signal`, the fallback is `Promise.race` against a timer, which stops waiting but cannot cancel the underlying request; that would be a known limit and is not needed for 1.5.144.
+- **Retry.** The SDK's own retry is disabled with `retries: { strategy: "none" }` so that the adapter owns the count. The adapter retries up to `HTTP_RETRY_COUNT` times only for `rate-limited` (429), `server-error` (5xx, including 502, and connection failures) and `timeout`. It never retries `unauthorized` (401), `insufficient-credits` (402), `http-status` (400, 403, 404 and other statuses), `empty-audio`, `aborted`, `missing-credentials` or `encode-failed`. A build abort ends the retry loop at once.
+- **Typed error.** Every failure becomes a `TtsError`. Mapping is structural, so tests need no SDK classes. In SDK 1.5.144 every HTTP error response extends `OpenRouterError`, which carries `statusCode`, `body` and `headers`; client-side failures extend `HTTPClientError` with a `name` of `RequestTimeoutError`, `RequestAbortedError` or `ConnectionError`. The adapter reads only `statusCode` (number) and `name` (string) from a thrown value: 401 gives `unauthorized`; 402 gives `insufficient-credits`; 429 gives `rate-limited`; 500 and above gives `server-error`; any other status gives `http-status`; name `RequestTimeoutError` gives `timeout`; name `RequestAbortedError` gives `aborted` (or `timeout` when only the timeout signal fired); name `ConnectionError` gives `server-error`; anything else unrecognised gives `server-error` without retry. The OpenRouter error JSON `{ error: { code, message } }` is in `body`; the adapter records the status code only, never the body (16.12). A failed ffmpeg step gives `encode-failed`. After `HTTP_RETRY_COUNT` retries the failure counts as a failed TTS call under 9.6 and no Episode is published.
+
+**X-Generation-Id (16.15).** On success `createSpeech` returns the bare byte stream, so the SDK 1.5.144 call gives no access to response headers and `X-Generation-Id` cannot be read. The adapter therefore logs nothing extra on success. Error objects do carry `headers`, but the adapter does not log them. If a later SDK version exposes headers on success, the adapter logs the id once per build.
+
+
+**Voice is the one open item.** OpenRouter publishes no voice list for this model (`voice` is optional and provider-specific), so the voice must be a Seed speaker id, chosen by listening test with `scripts/synthesize-seed-sample.ts` (16.16). The streaming sibling `bytedance-seed/seed-tts-3-0` has a published voice list including English voices. It is a fallback only if `seed-audio-1-0` voice selection proves unworkable; it is streaming and not the chosen model.
 Example test (not one of the six property tests): the argument builder always includes the sample rate, channel count and bitrate taken from the constant, and a changed constant changes the arguments. The tests use a fake process runner, so no real binary is needed and the suite stays offline.
 
 #### ASSUMED_TTS_AUDIO_FORMAT (`src/config/tts-format.ts`)
@@ -372,6 +412,17 @@ See **Data Models** and **Correctness Properties** below.
 ### Lock and deadline (`src/pipeline/lock.ts`, `src/pipeline/run.ts`)
 
 See the dedicated **Build lock, single-flight and deadline** subsection below.
+
+### Pre-generation and cost guards
+
+TTS spend happens only in the batch job (17.1, 17.2). The production build runs `scripts/build-briefing.ts` against the production MIT News feed on the existing 20-minute cron. It synthesizes once per campus per day and again only when the Selected_Set changes (11.2 to 11.4). Two guards keep spend bounded:
+
+- **Unchanged set.** The Selected_Set comparison (step 3 of the run) happens before any LLM or TTS call, so an equal set makes no TTS call (17.5, 11.3).
+- **Publishing nothing.** An empty selection, zero Survivors, a script under 150 words or over the Length_Budget all end the build before the `tts` stage, so none of them calls TTS (17.6, 8.4, 8.5). A too-short MP3 is only known after synthesis (9.10) and so cannot be avoided cheaply.
+
+A build makes one synthesis call, plus at most `HTTP_RETRY_COUNT` retries of it after a failure (17.7).
+
+**Request time.** The web player and the phone webhook (other specs) are Request_Handlers. They read Published_Files and nothing else, and they receive no `TtsAdapter` or `LlmAdapter` at all. The contract test (17.4) builds each existing handler with adapters that throw when called and checks that the handler still serves the published Episode. Handlers that do not exist yet are covered when their spec adds them; the shared test helper `test/helpers/throwing-adapters.ts` is what they reuse.
 
 ## Data Models
 
@@ -631,6 +682,7 @@ For any instant `now` (including instants within one hour of local midnight in C
 - The Normalizer never raises an error for malformed markup; malformed markup degrades to "preserve literally and report" (2.6, 2.10, 2.14, 2.15) rather than failing the build, because article HTml quality is outside the Pipeline's control and dropping the whole article for a single bad tag would be worse than a slightly noisier Source_Text.
 - `parseEpisode` failures are reported with the specific invalid field name and never cause a delete, quarantine or rewrite of the file that failed to parse (10.10) — this protects a human's ability to inspect the bad file after the fact.
 - Logging never writes a secret value (API key, credential) to any line (13.3); adapters accept credentials only via environment variables read at adapter construction time, never logged.
+- `TTS_ENGINE=seed` with a missing `OPENROUTER_API_KEY` gives `TtsError { kind: "missing-credentials" }` before any network request, and the build publishes nothing (16.10). An unknown `TTS_ENGINE` value gives a typed configuration error and no TTS call (16.3). Seed failures map to typed `TtsError` kinds as listed in the Seed adapter section (16.12). Errors thrown by the SDK (including 402 insufficient credits) are logged by status code only, never by body.
 
 ## Testing Strategy
 
@@ -684,6 +736,8 @@ Examples are not capped. "Implemented as PBT" is "yes" only for the six above.
 **Why PBT is used where it is**: property-based testing is used for the six targets that the requirements demand: the Length_Module budget predicate, Grounding_Checker rejection, Block_Tag_Set subset, Tag_Stripper provenance, Episode_JSON round-trip and Selector invariants. These are pure functions with large input spaces and universal properties. The other pure functions (Whitespace_Normalizer idempotence, Entity_Decoder, duration parser, `generatedFor`) also have genuine universal properties. Those properties are kept as requirement mappings in the Correctness Properties section and are covered by example tests, as listed in the Property test budget table. This is a deliberate cost cap, not a judgement that PBT does not fit them. The infrastructure-facing requirements (adapter wiring, logging, file I/O ordering, lock and deadline behavior, cron scheduling) are covered by example and smoke tests.
 
 **Fakes**: tests use a fake `LlmAdapter` and a fake `TtsAdapter` (14.5); the fake TTS adapter returns a real, valid MP3 byte buffer with a known duration (constructed from real frame headers, by default test MP3 builder variant (d), built from `ASSUMED_TTS_AUDIO_FORMAT` with ID3v2 plus ID3v1) so that tests exercise the same duration-measurement code path as production (14.5). A network-disabling test harness actively fails any test that attempts a real network call, rather than relying on the absence of network access in CI (14.6). All tests read feed input only from `content/fixtures/synthetic-3-items.xml` (14.2).
+
+**Seed and cost-guard tests (Requirements 16 and 17).** These are example tests, not property tests, so the six-property cap is unchanged. The Seed adapter is tested only against a fake `SpeechClient` object injected into `createSeedAdapter`; no test imports or calls the real SDK, the network-disabling harness stays on and no real Seed call is made (16.14). Cases: the request object passed to `createSpeech` (`model`, `input`, `voice`, `responseFormat` `"mp3"`, `retries` none, a `signal`), the fake's returned `ReadableStream` chunks collected into one buffer (including a multi-chunk stream), each error kind in 16.12 using fake thrown objects with `statusCode` and `name` (including 402 insufficient credits), retries happen for 429, 5xx and timeout and not for 400, 401, 402, 403 and 404 (counting fake calls, at most `HTTP_RETRY_COUNT` further calls), a fake that never resolves ends with `timeout` when `SEED_TTS_TIMEOUT_MS` is set small, a build abort gives `aborted`, the missing key makes no `createSpeech` call (16.10), no key in logs, the shared ffmpeg arguments for the Seed path (including the per-engine filter), and `selectTtsAdapter` for `'piper'`, `'seed'`, unset (defaults to Piper) and an unknown value (16.2, 16.3). Pipeline-level tests with a counting fake `TtsAdapter` check zero calls for an unchanged set and for each publish-nothing case before synthesis, and one call for a normal build (17.5 to 17.7). The request-time test uses throwing adapters (17.4).
 
 ## Requirement contradictions found
 

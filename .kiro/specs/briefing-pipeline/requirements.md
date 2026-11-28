@@ -8,7 +8,7 @@ This spec follows `docs/brief.md` (v1), which agrees with the steering files in 
 
 Out of scope: the web player, the Twilio webhook, keypad skip, article scraping, accounts, queues, databases and object storage.
 
-Open decisions (voice provider, LLM provider) are hidden behind adapter interfaces, so these requirements do not depend on them.
+Open decisions (LLM provider, and the Seed speaker id) are hidden behind adapter interfaces and configuration, so these requirements do not depend on them. The voice engine is decided: local Piper for tests and local runs, Seed TTS for the production demo (Requirement 16).
 
 A reference such as 11.9 means criterion 9 of Requirement 11.
 
@@ -38,7 +38,16 @@ A reference such as 11.9 means criterion 9 of Requirement 11.
 - **Survivor**: A Story_Script that passes the Grounding_Checker.
 - **Length_Budget**: The word budget per story count: 3 stories = 20 intro + 3 x 85 + 15 outro = 290 words; 2 stories = 20 + 2 x 120 + 15 = 275 words; 1 story = 20 + 165 + 15 = 200 words, at 150 words per minute.
 - **Length_Module**: The pure function in `length.ts` that computes word and character counts and checks them against the Length_Budget.
-- **TTS_Adapter**: The interface with one implementation that turns a script into an MP3 in one offline call.
+- **TTS_Adapter**: The interface that turns a script into one MP3 `Buffer` in one non-streaming call. It has one implementation per TTS_Engine value, and TTS_ENGINE selects exactly one of them in one place.
+- **TTS_Engine**: One of the two values `'piper'` and `'seed'`.
+- **TTS_ENGINE**: The named setting in `src/config/` that selects the TTS_Engine. Its default is `'piper'`.
+- **Piper_Adapter**: The TTS_Adapter implementation for `'piper'`: local `piper` plus `ffmpeg`, used by tests and local runs.
+- **Seed_Adapter**: The TTS_Adapter implementation for `'seed'`: ByteDance Seed Audio 1.0 (model `bytedance-seed/seed-audio-1-0`, non-streaming) called through the OpenRouter TypeScript SDK (`@openrouter/sdk`, `tts.createSpeech`), used for the production demo.
+- **Seed_Credentials**: The OpenRouter API key (`OPENROUTER_API_KEY`) that the Seed_Adapter reads from the environment.
+- **Speech_Client**: The minimal interface declared in `src/tts/seed.ts` with one method, `createSpeech`, that the `@openrouter/sdk` `tts` object satisfies and that tests replace with a fake object. Only the Seed_Adapter file (or one tiny factory beside it) imports the SDK.
+- **Seed_Speaker_Id**: The Seed speaker id sent as the `voice` field of the request. Its value is chosen by listening test.
+- **Published_Files**: The MP3 and the Episode_JSON that the Publisher last wrote.
+- **Request_Handler**: A web player or telephony handler that answers a listener request by serving Published_Files. These handlers belong to other specs; this spec states the contract they must keep.
 - **Publisher**: The component that concatenates Story_Scripts with Template_Text, requests audio, and writes the Episode files.
 - **Episode**: The published result: one MP3 file and one Episode JSON file.
 - **Episode_JSON**: The JSON file carrying `generatedFor`, the selected item IDs, and each story's Story_Script.
@@ -194,7 +203,7 @@ A reference such as 11.9 means criterion 9 of Requirement 11.
 4. WHEN the script is assembled, THE Publisher SHALL pass it to the TTS_Adapter, and THE TTS_Adapter SHALL return one MP3 file from one non-streaming call.
 5. THE Publisher SHALL take the campus name, voice id and greeting text from `src/config/`.
 6. IF the TTS_Adapter call fails after HTTP_RETRY_COUNT retries, THEN THE Pipeline SHALL leave the published Episode unchanged and log the error.
-7. THE Pipeline SHALL expose the TTS_Adapter and the LLM as interfaces with one implementation each.
+7. THE Pipeline SHALL expose the TTS_Adapter and the LLM as interfaces; the LLM has one implementation, and the TTS_Adapter has one implementation per TTS_Engine, selected in one place (Requirement 16).
 8. WHEN the TTS_Adapter returns an MP3, THE Publisher SHALL measure the actual duration of that MP3 and log the measured duration, on every build.
 9. IF the duration of the MP3 cannot be measured, THEN THE Pipeline SHALL count the duration check as failed, publish no Episode, and log the failure.
 10. IF the measured MP3 duration is below MIN_EPISODE_SECONDS, THEN THE Pipeline SHALL publish no Episode and log the failure.
@@ -281,8 +290,45 @@ A reference such as 11.9 means criterion 9 of Requirement 11.
 
 #### Acceptance Criteria
 
-1. THE Pipeline SHALL read the campus name, Feed URLs, Campus_Timezone, voice id, greeting text, word targets, Too_Thin_Threshold, story count cap, PROPERTY_TEST_RUNS, HTTP_RETRY_COUNT, MIN_EPISODE_SECONDS, BUILD_BUDGET_SECONDS and BUILD_LOCK_GRACE_SECONDS only from `src/config/`, each declared with a unit comment.
+1. THE Pipeline SHALL read the campus name, Feed URLs, Campus_Timezone, voice id, TTS_ENGINE, the Seed base URL, model and Seed_Speaker_Id defaults, greeting text, word targets, Too_Thin_Threshold, story count cap, PROPERTY_TEST_RUNS, HTTP_RETRY_COUNT, MIN_EPISODE_SECONDS, BUILD_BUDGET_SECONDS and BUILD_LOCK_GRACE_SECONDS only from `src/config/`, each declared with a unit comment.
 2. WHERE an HTML-stripping dependency is used, THE repository SHALL record that dependency and its reason in `.kiro/steering/tech.md`.
 3. THE Pipeline SHALL use no database, queue, broker, ORM, vector store or object storage.
 4. THE Pipeline SHALL pass every network call through `src/lib/http.ts`, which applies a timeout, HTTP_RETRY_COUNT retries and a typed error.
 5. THE Pipeline SHALL return `Result<T, E>` values at module boundaries.
+
+### Requirement 16: TTS engines and Seed TTS adapter
+
+**User Story:** As a maintainer, I want tests and local runs to use local Piper and the production demo to use Seed TTS, so that a clean checkout runs with no credentials and the demo voice has better quality.
+
+#### Acceptance Criteria
+
+1. THE `src/config/` module SHALL declare TTS_ENGINE with the allowed values `'piper'` and `'seed'` and the default `'piper'`.
+2. WHEN TTS_ENGINE is `'piper'`, THE Pipeline SHALL build the Piper_Adapter, and WHEN TTS_ENGINE is `'seed'`, THE Pipeline SHALL build the Seed_Adapter, in one engine-selection function that is the only place that chooses an implementation.
+3. IF TTS_ENGINE holds any value other than `'piper'` or `'seed'`, THEN THE Pipeline SHALL return a typed configuration error, make no TTS call and publish no Episode.
+4. WHEN the Seed_Adapter synthesizes a script, THE Seed_Adapter SHALL make one non-streaming synthesis call per build through `tts.createSpeech` of the OpenRouter SDK, collect the returned byte stream into one audio `Buffer`, and return one MP3 `Buffer` to the Publisher.
+5. THE Seed_Adapter SHALL provide, around the SDK call, a timeout (the named constant `SEED_TTS_TIMEOUT_MS`, unit milliseconds, applied through an `AbortSignal` combined with the build signal), up to HTTP_RETRY_COUNT retries only for HTTP 429, HTTP 5xx and timeout failures (never for HTTP 400, 401, 402, 403 or 404), and a typed `TtsError`, with the SDK's own retry disabled, because the SDK call is the one permitted exception to routing network calls through `src/lib/http.ts`.
+6. THE Seed_Adapter SHALL pass a request object to `createSpeech` with `speechRequest` holding `model`, `input` (the script), `voice` (the Seed_Speaker_Id) and `responseFormat` set to `"mp3"` on every call.
+7. WHEN the Seed_Adapter has collected the byte stream, THE Seed_Adapter SHALL pass the bytes through the same `ffmpeg` step as the Piper_Adapter, so that the published MP3 is MPEG-2 Layer III, 24000 Hz, mono, 48 kbit/s constant bitrate, as set by `ASSUMED_TTS_AUDIO_FORMAT`.
+8. THE `src/config/` module SHALL declare one radio-filter constant per TTS_Engine, each with a unit or purpose comment; the `'piper'` constant SHALL equal `TTS_RADIO_FILTER`, and the `'seed'` constant SHALL default to no filter and SHALL be changeable without editing a module.
+9. THE Seed_Adapter SHALL read Seed_Credentials from environment variables only and SHALL NOT place the API key in code, log lines or committed files.
+10. IF TTS_ENGINE is `'seed'` and `OPENROUTER_API_KEY` is missing or empty, THEN THE Seed_Adapter SHALL return a typed `TtsError` of kind `missing-credentials` before any network request, and THE Pipeline SHALL publish no Episode.
+11. THE `src/config/` module SHALL declare the model `SEED_TTS_MODEL` (default `bytedance-seed/seed-audio-1-0`), the Seed_Speaker_Id `SEED_TTS_VOICE` and `SEED_TTS_TIMEOUT_MS` as named constants, with the model and voice overridable by environment variables, each with a unit or purpose comment.
+12. IF the OpenRouter service answers with HTTP status 401, 402, 429 or 5xx, an empty audio body, a timeout or an abort, THEN THE Seed_Adapter SHALL return a typed `TtsError` whose kind names the cause (`unauthorized` for 401, `insufficient-credits` for 402, `rate-limited` for 429, `server-error` for 5xx, `empty-audio`, `timeout`, `aborted`), and for any other non-2xx status the kind `http-status`, carrying the status code only and no response body that could echo a credential, and THE Pipeline SHALL publish no Episode.
+13. THE repository SHALL document every Seed environment variable name in `README.md` and `.env.example`, with a placeholder and no real value in either file.
+14. THE test suite SHALL test the Seed_Adapter only against a fake Speech_Client injected into the adapter, without importing or calling the real SDK, SHALL include example tests for the request object passed to `createSpeech` (`model`, `input`, `voice`, `responseFormat` `"mp3"`), collection of the byte stream into the audio buffer, error mapping (12) including 402 insufficient credits, retry only on retryable failures (11 and 12), the missing key (10) and engine selection by TTS_ENGINE, and SHALL make no real network call.
+15. WHERE the SDK call exposes the `X-Generation-Id` response header, THE Seed_Adapter SHALL log its value once per build with the `briefingId`, and no log line SHALL contain the API key.
+16. THE Seed_Speaker_Id SHALL be chosen by a listening test with `scripts/synthesize-seed-sample.ts` before the production demo (OPEN QUESTION in `.kiro/steering/product.md`); the endpoint, authentication and model are resolved.
+### Requirement 17: Pre-generation and cost guards
+
+**User Story:** As a maintainer paying for production TTS, I want audio generated only by the batch build and only when it is needed, so that spend stays bounded and listeners never wait for synthesis.
+
+#### Acceptance Criteria
+
+1. THE production build SHALL run from the cron entry point `scripts/build-briefing.ts` against the production Feed, once per campus per day and again whenever the Selected_Set changes (Requirement 11).
+2. THE Pipeline SHALL make TTS calls only inside a build started by `scripts/build-briefing.ts`.
+3. WHEN a Request_Handler answers a request, THE Request_Handler SHALL serve only the Published_Files and SHALL make no TTS call and no LLM call.
+4. THE test suite SHALL include a test in which every Request_Handler that exists is built with a TTS_Adapter and an LLM adapter that throw when called, and in which each handler still serves the published Episode.
+5. WHEN the new Selected_Set equals the stored Selected_Set, THE Pipeline SHALL make no TTS call (cost guard; see 11.3).
+6. IF the Pipeline decides before synthesis to publish nothing (empty selection, no Survivor, final script under 150 words, or final script over the Length_Budget), THEN THE Pipeline SHALL make no TTS call.
+7. THE Pipeline SHALL make one synthesis call per build, plus at most HTTP_RETRY_COUNT retries of that call after a failure.
+8. THE test suite SHALL include example tests, with a counting fake TTS_Adapter, for 17.5, 17.6 and 17.7.

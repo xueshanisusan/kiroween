@@ -4,3 +4,5 @@ content/fixtures/*.xml
 node_modules/
 models/
 samples/
+
+.env

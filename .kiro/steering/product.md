@@ -81,7 +81,9 @@ campus, claim "swap the config, get another campus".
 ## OPEN QUESTIONS — Kiro: if a task depends on one of these, STOP and ask.
 - [x] Which campus, which feed URL? Official RSS, or scrape the news index?
 - [x] Phone number: Twilio trial number acceptable? Who owns it?
-- [x] Voice: local Piper + ffmpeg (no cost, no credentials). Polly and ElevenLabs rejected on cost. Listen test over a phone speaker still pending.
+- [x] Voice: two engines behind one adapter. Local Piper + ffmpeg is the default for tests and local runs (no cost, no credentials). ByteDance Seed Audio 1.0 (`bytedance-seed/seed-audio-1-0`, non-streaming) through OpenRouter is the production demo voice, chosen by the team for voice quality; selected by `TTS_ENGINE`. Polly and ElevenLabs rejected on cost. Listen test over a phone speaker still pending for each engine. OpenRouter bills per call, which is why TTS stays batch-only (requirement 17).
+- [x] Seed TTS endpoint, auth and model: resolved. `POST https://openrouter.ai/api/v1/audio/speech`, `Authorization: Bearer <OPENROUTER_API_KEY>`, model `bytedance-seed/seed-audio-1-0`, `response_format` `mp3`. The same `OPENROUTER_API_KEY` could later serve the summarizer LLM behind `summarize/summarize.ts`; that work is not planned here.
+- [ ] Seed speaker id (`SEED_TTS_VOICE`): OpenRouter publishes no voice list for this model, so choose the id by listening test with `scripts/synthesize-seed-sample.ts` (task 19.5). Do not guess. Kiro: if a task depends on this value, STOP and ask. Fallback only if voice selection proves unworkable: streaming sibling `bytedance-seed/seed-tts-3-0`, which has a published voice list.
 
 ## Submission requirements that affect the code
 
