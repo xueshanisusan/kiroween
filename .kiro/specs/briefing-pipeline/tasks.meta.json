@@ -815,6 +815,66 @@
         "executionId": "6bc8bf1b-0e7e-4134-a85e-74d0099c8317",
         "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
         "timestamp": 1795824362774
+      },
+      {
+        "executionId": "6bc8bf1b-0e7e-4134-a85e-74d0099c8317",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795824533841
+      }
+    ],
+    "19.2 Implement the Seed adapter and its tests": [
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795824732107
+      },
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795825506959
+      }
+    ],
+    "19.3 Write cost-guard and request-time-no-TTS tests": [
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795825508602
+      },
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795825642289
+      }
+    ],
+    "19.4 Update `README.md` and add `.env.example`": [
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795825509151
+      },
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795825642830
+      }
+    ],
+    "19.5 Add the manual script `scripts/synthesize-seed-sample.ts`": [
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795825509645
+      },
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795825643335
+      }
+    ],
+    "19. Seed TTS production engine and cost guards (added after task 13.8; numbered 19 so completed task numbers stay unchanged)": [
+      {
+        "executionId": "7477b9b2-3d4a-41d9-8889-becad0474fcf",
+        "chatSessionId": "sess_5e74a5c7-468a-4a03-bb74-2c13f4ea0ef0",
+        "timestamp": 1795825643437
       }
     ]
   }

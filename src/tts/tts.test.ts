@@ -4,14 +4,16 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { FFMPEG_BINARY, PIPER_BINARY, PIPER_VOICE_MODEL_DIR, TTS_RADIO_FILTER, TTS_SENTENCE_SILENCE_SECONDS, VOICE_ID } from "../config/index.js";
+import { FFMPEG_BINARY, PIPER_BINARY, PIPER_VOICE_MODEL_DIR, TTS_ENGINE_FILTERS, TTS_RADIO_FILTER, TTS_SENTENCE_SILENCE_SECONDS, VOICE_ID } from "../config/index.js";
 import { ASSUMED_TTS_AUDIO_FORMAT } from "../config/tts-format.js";
 import { measureMp3DurationSeconds } from "../publish/duration.js";
 import { createFakeTtsAdapter } from "./fake.js";
 import {
   buildFfmpegArgs,
   buildPiperArgs,
+  buildSeedFfmpegArgs,
   createLocalTtsAdapter,
+  selectTtsAdapter,
   createSpawnRunner,
   type ProcessOutcome,
   type ProcessRunner,
@@ -106,6 +108,45 @@ describe("local TTS adapter arguments", () => {
     const { runner } = fakeRunner();
     await createLocalTtsAdapter({ runner, tempRoot: root }).synthesize("x", "v", signal);
     expect(await readdir(root)).toEqual([]);
+  });
+});
+
+describe("TTS engine selection and per-engine filters", () => {
+  const fakeAdapter = createFakeTtsAdapter();
+
+  it("selects Piper for 'piper' and for an unset engine", () => {
+    const piper = () => fakeAdapter;
+    expect(selectTtsAdapter("piper", { piper })).toEqual({ ok: true, value: fakeAdapter });
+    expect(selectTtsAdapter(undefined, { piper })).toEqual({ ok: true, value: fakeAdapter });
+    expect(selectTtsAdapter("piper").ok).toBe(true);
+  });
+
+  it("selects the injected Seed factory, or the real Seed adapter by default", () => {
+    expect(selectTtsAdapter("seed", { seed: () => fakeAdapter })).toEqual({ ok: true, value: fakeAdapter });
+    const res = selectTtsAdapter("seed");
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.value).not.toBe(fakeAdapter);
+  });
+
+  it("returns a typed configuration error for an unknown engine and builds no adapter", () => {
+    let built = false;
+    const res = selectTtsAdapter("polly", { piper: () => ((built = true), fakeAdapter), seed: () => ((built = true), fakeAdapter) });
+    expect(built).toBe(false);
+    expect(res).toEqual({ ok: false, error: { kind: "unconfigured", message: "unknown TTS_ENGINE 'polly'", attempts: 0 } });
+  });
+
+  it("keeps the Piper filter equal to TTS_RADIO_FILTER and the Piper arguments unchanged", () => {
+    expect(TTS_ENGINE_FILTERS.piper).toBe(TTS_RADIO_FILTER);
+    const a = buildFfmpegArgs("i.wav", "o.mp3", TTS_ENGINE_FILTERS.piper);
+    expect(a).toEqual(buildFfmpegArgs("i.wav", "o.mp3"));
+    expect(a[a.indexOf("-af") + 1]).toBe(TTS_RADIO_FILTER);
+  });
+
+  it("omits -af for Seed by default and adds it when the filter is set", () => {
+    expect(TTS_ENGINE_FILTERS.seed).toBe("");
+    expect(buildSeedFfmpegArgs("i.mp3", "o.mp3")).not.toContain("-af");
+    const a = buildSeedFfmpegArgs("i.mp3", "o.mp3", "volume=2");
+    expect(a[a.indexOf("-af") + 1]).toBe("volume=2");
   });
 });
 

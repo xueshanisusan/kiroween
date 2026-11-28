@@ -6,7 +6,7 @@
  *
  * Environment:
  *   LLM_API_KEY, LLM_API_URL, LLM_MODEL  LLM adapter (read by createEnvLlmAdapter)
- *   (TTS needs no credentials: local `piper` and `ffmpeg` binaries, see README)
+ *   TTS_ENGINE                           'piper' (default, no credentials) or 'seed'
  *   BRIEFING_DATA_DIR                    Episode and lock directory (default: ./data)
  *
  * Exit codes: 0 for published, unchanged, skipped-locked and no-briefing; 1 for failed.
@@ -18,18 +18,24 @@ import { createHttpClient } from "../src/lib/http.js";
 import { createLogger } from "../src/lib/log.js";
 import { runPipeline } from "../src/pipeline/run.js";
 import { createEnvLlmAdapter } from "../src/summarize/llm.js";
-import { createLocalTtsAdapter } from "../src/tts/tts.js";
+import { selectTtsAdapter } from "../src/tts/tts.js";
 
 async function main(): Promise<number> {
   const logger = createLogger();
   const dir = resolve(process.env.BRIEFING_DATA_DIR ?? "data");
   mkdirSync(dir, { recursive: true });
 
+  const tts = selectTtsAdapter();
+  if (!tts.ok) {
+    process.stderr.write(`build-briefing: ${tts.error.message}\n`);
+    return 1;
+  }
+
   const http = createHttpClient();
   const outcome = await runPipeline({
     http,
     llm: createEnvLlmAdapter(http, process.env),
-    tts: createLocalTtsAdapter(),
+    tts: tts.value,
     clock: () => new Date(),
     dir,
     logger,

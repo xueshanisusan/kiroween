@@ -7,13 +7,30 @@ import {
   HTTP_RETRY_COUNT,
   PIPER_BINARY,
   PIPER_VOICE_MODEL_DIR,
+  TTS_ENGINE,
+  TTS_ENGINE_FILTERS,
   TTS_RADIO_FILTER,
   TTS_SENTENCE_SILENCE_SECONDS,
 } from "../config/index.js";
 import { ASSUMED_TTS_AUDIO_FORMAT } from "../config/tts-format.js";
 import type { Result } from "../types.js";
+import { createSeedAdapter } from "./seed.js";
 
-export type TtsErrorKind = "unconfigured" | "request" | "aborted" | "empty";
+export type TtsErrorKind =
+  | "unconfigured"
+  | "request"
+  | "aborted"
+  | "empty"
+  // Seed engine kinds (task 19.2)
+  | "missing-credentials"
+  | "unauthorized"
+  | "insufficient-credits"
+  | "rate-limited"
+  | "server-error"
+  | "http-status"
+  | "timeout"
+  | "empty-audio"
+  | "encode-failed";
 
 export type TtsError = {
   kind: TtsErrorKind;
@@ -124,8 +141,7 @@ export function buildFfmpegArgs(wavPath: string, mp3Path: string, filter: string
     "error",
     "-i",
     wavPath,
-    "-af",
-    filter,
+    ...(filter === "" ? [] : ["-af", filter]),
     "-ar",
     String(ASSUMED_TTS_AUDIO_FORMAT.sampleRateHz),
     "-ac",
@@ -136,6 +152,30 @@ export function buildFfmpegArgs(wavPath: string, mp3Path: string, filter: string
     `${ASSUMED_TTS_AUDIO_FORMAT.fakeBitrateKbps}k`,
     mp3Path,
   ];
+}
+
+/**
+ * ffmpeg arguments for the Seed engine: same pinned format, with the Seed filter
+ * from config (no -af when empty). Task 19.2's adapter uses this.
+ */
+export function buildSeedFfmpegArgs(inputPath: string, mp3Path: string, filter: string = TTS_ENGINE_FILTERS.seed): string[] {
+  return buildFfmpegArgs(inputPath, mp3Path, filter);
+}
+
+/**
+ * The only place that chooses a TTS implementation. An unset engine means Piper.
+ * An unknown value returns a typed "unconfigured" error and nothing is synthesized.
+ * `options.seed` lets tests inject a Seed factory.
+ */
+export function selectTtsAdapter(
+  engine: string | undefined = TTS_ENGINE,
+  options: { piper?: () => TtsAdapter; seed?: () => TtsAdapter } = {},
+): Result<TtsAdapter, TtsError> {
+  const name = engine === undefined || engine === "" ? "piper" : engine;
+  if (name === "piper") return { ok: true, value: (options.piper ?? createLocalTtsAdapter)() };
+  // seed.ts loads the OpenRouter SDK only with a dynamic import inside a request, so this static import never loads it.
+  if (name === "seed") return { ok: true, value: (options.seed ?? (() => createSeedAdapter({ env: process.env })))() };
+  return { ok: false, error: { kind: "unconfigured", message: `unknown TTS_ENGINE '${name}'`, attempts: 0 } };
 }
 
 export interface LocalTtsAdapterOptions {

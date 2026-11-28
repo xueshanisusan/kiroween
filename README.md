@@ -25,6 +25,30 @@ The build speaks the script with local [Piper](https://github.com/rhasspy/piper)
 
 Still to do: listen to a built episode over a phone speaker outdoors to confirm the voice is intelligible.
 
+## Production voice (Seed TTS)
+
+There are two TTS engines behind one adapter, selected by `TTS_ENGINE` (read in `src/config/index.ts`):
+
+- `piper` (default when `TTS_ENGINE` is unset): local Piper plus ffmpeg, described above. Used by tests and local runs.
+- `seed`: ByteDance Seed Audio 1.0 (`bytedance-seed/seed-audio-1-0`) through OpenRouter, using the `@openrouter/sdk` package. This is the production demo voice.
+
+Environment variables (see `.env.example`; `.env` is git-ignored, `.env.example` is committed):
+
+| Variable | Meaning |
+| --- | --- |
+| `TTS_ENGINE` | `piper` or `seed`. Empty or unset means `piper`. |
+| `OPENROUTER_API_KEY` | OpenRouter key. Needed only for `seed`. Environment only; never commit it. |
+| `SEED_TTS_MODEL` | Model id. Defaults to `bytedance-seed/seed-audio-1-0`. |
+| `SEED_TTS_VOICE` | Seed speaker id. Optional: when empty, the voice field is omitted and the API default voice is used. |
+
+Notes:
+
+- Tests and local runs never need credentials. The default engine is Piper, and tests use a fake client and never call Seed or the network.
+- TTS spend happens only in the batch job `scripts/build-briefing.ts`. The web player and phone line only serve the published MP3. A build makes no TTS call when the selected story set is unchanged or when nothing is published.
+- Schedule: run `scripts/build-briefing.ts` from cron every 20 minutes (for example `*/20 * * * *`, with `TTS_ENGINE=seed` and `OPENROUTER_API_KEY` set in the job's environment).
+- Cost: OpenRouter bills per call, about $0.15 per minute of audio. A 60 to 120 s Episode costs roughly $0.15 to $0.30 (one build, one call).
+- Still to do: the Seed speaker id has not been chosen. Pick it by listening test with the manual sample script `scripts/synthesize-seed-sample.ts` (task 19.5), then set `SEED_TTS_VOICE`. Also confirm the Seed voice is intelligible over a phone speaker outdoors.
+
 ## Generate voice samples
 
 Manual tools for choosing a voice. They are not part of the pipeline, and `models/` and `samples/` are git-ignored.

@@ -17,6 +17,30 @@ export const TTS_SENTENCE_SILENCE_SECONDS = 0.3;
 export const TTS_RADIO_FILTER =
   "highpass=f=300,lowpass=f=3400,acompressor=threshold=-18dB:ratio=4,aecho=0.8:0.5:45:0.25,volume=1.3";
 
+/** Supported TTS engines (text identifiers). */
+export type TtsEngine = "piper" | "seed";
+
+/** Selected TTS engine: 'piper' (default; tests and local, no credentials) or 'seed' (production). Read from TTS_ENGINE; unset means piper. Left as text so an unknown value is reported by selectTtsAdapter. */
+export const TTS_ENGINE: string = process.env.TTS_ENGINE ?? "piper";
+
+/** Per-engine ffmpeg -af filter chain (ffmpeg filtergraph text). An empty string means no -af argument. */
+export const TTS_ENGINE_FILTERS: Record<TtsEngine, string> = {
+  piper: TTS_RADIO_FILTER,
+  seed: "",
+};
+
+/** OpenRouter model id for Seed TTS (text). Override with SEED_TTS_MODEL. */
+export const SEED_TTS_MODEL: string = process.env.SEED_TTS_MODEL ?? "bytedance-seed/seed-audio-1-0";
+
+/**
+ * Seed speaker id (text, provider-specific). OPEN QUESTION in product.md: deliberately NOT guessed.
+ * Empty by default, meaning no voice is sent; set SEED_TTS_VOICE after the listening test.
+ */
+export const SEED_TTS_VOICE: string = process.env.SEED_TTS_VOICE ?? "";
+
+/** Timeout for one Seed TTS request (milliseconds). */
+export const SEED_TTS_TIMEOUT_MS = 60_000;
+
 /** Piper executable, looked up on PATH (command name or absolute path). */
 export const PIPER_BINARY = "piper";
 
